@@ -43,7 +43,6 @@ gulp.task('sass', () => {
 	// their old versions wont exist.
 	return main.pipe(cleanDest('dist'))
 		.pipe(gulp.dest('dist'))
-		.pipe(gulpif(LIVE_RELOAD, connect.reload()))
 		.pipe(gulpif(TASK_NOTIFICATION, notify({message: 'SASS built'})))
 })
 
@@ -52,8 +51,15 @@ gulp.task('copy-js', () =>
         .pipe(plumber(plumberErrorHandler))
         .pipe(cleanDest('dist'))
 		.pipe(gulp.dest('dist'))
-		.pipe(gulpif(LIVE_RELOAD, connect.reload()))
 		.pipe(gulpif(TASK_NOTIFICATION, notify({message: 'JS copied'})))
+)
+
+gulp.task('dist-to-docs', () =>
+	gulp.src(`dist/*`)
+        .pipe(plumber(plumberErrorHandler))
+        .pipe(cleanDest('docs'))
+		.pipe(gulp.dest('docs'))
+		.pipe(gulpif(LIVE_RELOAD, connect.reload()))
 )
 
 gulp.task('watch', () => {
@@ -61,19 +67,21 @@ gulp.task('watch', () => {
 	TASK_NOTIFICATION = true
 	connect.server({
 		name: 'Dist App',
-		root: '.',
+		root: 'docs',
 		host: '0.0.0.0',
 		port: 8080,
 		livereload: true
 	});
 	gulp.watch('src/*.sass', gulp.parallel('sass'))
 	gulp.watch('src/*.js', gulp.parallel('copy-js'))
+	gulp.watch('dist/*', gulp.parallel('dist-to-docs'))
 	// Open browser
 	gulp.src(__filename).pipe(open({uri: 'http://localhost:8080'}))
 })
 
 gulp.task('build', gulp.series(
-	gulp.parallel('sass', 'copy-js')
+	gulp.parallel('sass', 'copy-js'),
+	'dist-to-docs'
 ))
 
 gulp.task('default', gulp.series('build', 'watch'))
