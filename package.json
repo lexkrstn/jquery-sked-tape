@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Schedule component for jQuery that represents events in tape manner.",
   "main": "dist/jquery.skedTape.js",
+  "style": "dist/jquery.skedTape.css",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
