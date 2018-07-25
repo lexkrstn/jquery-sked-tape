@@ -659,12 +659,13 @@ $.fn.skedTape = function(opts) {
 			delete objOpts.events;
 			delete objOpts.start;
 			delete objOpts.end;
+			delete objOpts.deferRender;
             obj = new SkedTape(objOpts);
 			opts.start && opts.end && obj.setTimespan(opts.start, opts.end);
 			opts.locations && obj.setLocations(opts.locations);
 			opts.events && obj.setEvents(opts.events);
 			$(this).data($.fn.skedTape.dataKey, obj);
-			obj.render();
+			opts.deferRender || obj.render();
         } else if (cmd) {
             switch (cmd) {
                 case 'destroy':
@@ -685,7 +686,8 @@ $.fn.skedTape = function(opts) {
                 case 'zoomIn':
                 case 'zoomOut':
                 case 'setZoom':
-                case 'resetZoom':
+				case 'resetZoom':
+				case 'render':
                     obj[cmd].apply(obj, args);
                     break;
                 default:
@@ -735,6 +737,10 @@ $.fn.skedTape.defaults = {
 	 * Minimum gap to DO NOT highlight adjacent entries.
 	 */
 	minGapHiTime: false
+};
+
+$.skedTape = function(opts) {
+	return $('<div/>').skedTape($extend(opts || {}, {deferRender: true}));
 };
 
 }(jQuery));
