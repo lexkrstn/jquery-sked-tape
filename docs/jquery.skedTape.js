@@ -399,7 +399,8 @@ SkedTape.prototype = {
 	},
 	cleanup: function() {
 		if ($.fn.popover) {
-			this.$el.find('.sked-tape__event').popover('destroy');
+			this.$el.find('.sked-tape__event')
+				.popover(TWBS_MAJOR >= 4 ? 'dispose' : 'destroy');
 		}
 		if (this.indicatorTimeout) {
 			clearInterval(this.indicatorTimeout);
@@ -431,9 +432,10 @@ SkedTape.prototype = {
 				if ($.fn.popover) {
 					$entry.popover({
 						trigger: 'hover',
+						title: '--',
 						content: $entry.find('.sked-tape__center').html(),
 						html: true,
-						template: '<div class="popover" role="tooltip"><div class="arrow"></div><div class="popover-content"></div></div>',
+						template: '<div class="popover" role="tooltip"><div class="arrow"></div><div class="popover-body"></div></div>'	,
 						placement: parseInt($entry[0].style.left) < 50 ? 'right' : 'left'
 					});
 				}
@@ -552,6 +554,7 @@ SkedTape.CollisionError.prototype = Object.create(Error.prototype);
 SkedTape.CollisionError.prototype.name = "SkedTape.CollisionError";
 SkedTape.CollisionError.prototype.constructor = SkedTape.CollisionError;
 
+var TWBS_MAJOR = parseInt($.fn.popover.Constructor.VERSION.charAt(0), 10);
 var SECS_PER_DAY = 24 * 60 * 60;
 var MS_PER_DAY = SECS_PER_DAY * 1000;
 var MS_PER_MINUTE = 60 * 1000;

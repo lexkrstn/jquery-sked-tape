@@ -5,11 +5,17 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <title>jQuery.skedTape</title>
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="//stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
         <link rel="stylesheet" href="jquery.skedTape.css">
     </head>
     <body>
-        <div id="sked"></div>
+        <div class="container">
+            <h2 class="mb-3">$.skedTape plugin demo</h2>
+            <div id="sked"></div>
+        </div>
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+        <script src="//stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
         <script src="jquery.skedTape.js"></script>
         <script type="text/javascript">
             var $sked = $('#sked').skedTape({
@@ -44,6 +50,13 @@
                         location: '2',
                         start: yesterday('22:00'),
                         end: today('01:30'),
+                        class: 'custom-class'
+                    },
+                    {
+                        name: 'Meeting just after the previous one',
+                        location: '2',
+                        start: today('01:45'),
+                        end: today('02:45'),
                         class: 'custom-class'
                     },
                     {
