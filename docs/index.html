@@ -20,8 +20,8 @@
         <script type="text/javascript">
             var $sked = $('#sked').skedTape({
                 caption: 'Cities',
-                start: yesterday('22:00'),
-                end: today('12:00'),
+                start: yesterday(22, 0),
+                end: today(12, 0),
                 showEventTime: true,
                 showEventDuration: true,
                 locations: {
@@ -34,51 +34,75 @@
                 },
                 events: [
                     {
-                        name: 'Meeting',
+                        name: 'Meeting 1',
                         location: 'london',
-                        start: today('04:15'),
-                        end: today('07:30')
+                        start: today(4, 15),
+                        end: today(7, 30)
+                    },
+                    {
+                        name: 'Meeting 2',
+                        location: 'london',
+                        start: today(7, 30),
+                        end: today(9, 15)
                     },
                     {
                         name: 'Meeting',
                         location: '1',
-                        start: today('10:00'),
-                        end: today('11:30')
+                        start: today(10, 0),
+                        end: today(11, 30)
                     },
                     {
                         name: 'Meeting with custom class',
                         location: '2',
-                        start: yesterday('22:00'),
-                        end: today('01:30'),
+                        start: yesterday(22, 0),
+                        end: today(1, 30),
                         class: 'custom-class'
                     },
                     {
                         name: 'Meeting just after the previous one',
                         location: '2',
-                        start: today('01:45'),
-                        end: today('02:45'),
+                        start: today(1, 45),
+                        end: today(2, 45),
+                        class: 'custom-class'
+                    },
+                    {
+                        name: 'And another one...',
+                        location: '2',
+                        start: today(3, 10),
+                        end: today(5, 30),
                         class: 'custom-class'
                     },
                     {
                         name: 'Disabled meeting',
                         location: '3',
-                        start: yesterday('22:15'),
-                        end: yesterday('23:30'),
+                        start: yesterday(22, 15),
+                        end: yesterday(23, 30),
                         disabled: true
                     },
                     {
                         name: 'Meeting that started early',
                         location: '6',
-                        start: yesterday('21:45'),
-                        end: today('00:45')
+                        start: yesterday(21, 45),
+                        end: today(0, 45)
                     },
                     {
                         name: 'Late meeting',
                         location: '5',
-                        start: today('11:15'),
-                        end: today('13:45')
+                        start: today(11, 15),
+                        end: today(13, 45)
                     },
-                ]
+                ],
+                formatters: {
+                    date: function (date) {
+                        return $.fn.skedTape.format.date(date, 'l', '.');
+                    },
+                    duration: function (start, end, opts) {
+                        return $.fn.skedTape.format.duration(start, end, {
+                            hrs: 'ч.',
+                            min: 'мин.'
+                        });;
+                    },
+                }
             });
             $sked.on('skedtape:event:click', function(e) {
                 $sked.skedTape('removeEvent', e.detail.event.id);
@@ -88,8 +112,8 @@
                     $sked.skedTape('addEvent', {
                         name: 'New meeting',
                         location: '3',
-                        start: today('03:15'),
-                        end: today('06:00')
+                        start: today(3, 15),
+                        end: today(6, 0)
                     });
                 }
                 catch (e) {
@@ -98,25 +122,20 @@
                 }
             });
 
-            function pad(n) {
-                return n > 9 ? n : '0' + n;
-            }
-            function datetime(date, time) {
-                return new Date(date.getFullYear() + '-' + pad(date.getMonth())
-                    + '-' + pad(date.getDate()) + 'T' + time);
-            }
-            function yesterday(time) {
+            function today(hours, minutes) {
                 var date = new Date();
+                date.setUTCHours(hours, minutes, 0, 0);
+                return date;
+            }
+            function yesterday(hours, minutes) {
+                var date = today(hours, minutes);
                 date.setTime(date.getTime() - 24 * 60 * 60 * 1000);
-                return datetime(date, time);
+                return date;
             }
-            function today(time) {
-                return datetime(new Date(), time);
-            }
-            function tomorrow(time) {
-                var date = new Date();
+            function tomorrow(hours, minutes) {
+                var date = today(hours, minutes);
                 date.setTime(date.getTime() + 24 * 60 * 60 * 1000);
-                return datetime(date, time);
+                return date;
             }
         </script>
     </body>

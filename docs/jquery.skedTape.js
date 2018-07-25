@@ -8,6 +8,7 @@ var SkedTape = function(opts) {
 	this.locations = {};
 	this.events = [];
 	this.lastEventId = 0;
+	this.format = $.extend({}, SkedTape.defaultFormatters, (opts && opts.formatters) || {});
 
 	this.$el.on('click', '.sked-tape__event', $.proxy(this.handleEventClick, this));
 	this.$el.on('contextmenu', '.sked-tape__event', $.proxy(this.handleEventContextMenu, this));
@@ -15,6 +16,35 @@ var SkedTape = function(opts) {
 	this.$el.on('contextmenu', '.sked-tape__timeline-wrap', $.proxy(this.handleTimelineContextMenu, this));
 	this.$el.on('keydown', '.sked-tape__time-frame', $.proxy(this.handleKeyDown, this));
 	this.$el.on('wheel', '.sked-tape__time-frame', $.proxy(this.handleWheel, this));
+};
+
+SkedTape.defaultFormatters = {
+	date: function (date, endian, delim) {
+		endian = endian || 'm';
+		var nums = date.toISOString().substring(0, 10).split('-');
+		nums = endian === 'l' ? nums.reverse() : nums;
+		nums = endian === 'm' ? [parseInt(nums[1]), parseInt(nums[2]), nums[0]] : nums;
+		return nums.join(delim || (endian === 'm' ? '/' : '.'));
+	},
+	duration: function (start, end, opts) {
+		var ms = end.getTime() - start.getTime();
+		var h = Math.floor(ms / MS_PER_HOUR);
+		var m = Math.floor((ms % MS_PER_HOUR) / MS_PER_MINUTE);
+		var hrs = (opts && opts.hrs) || 'hrs';
+		var min = (opts && opts.min) || 'min';
+		var format = h ? h + hrs : '';
+		format += h && m ? ' ' : '';
+		format += m ? m + min : '';
+		return format;
+	},
+	hours: function (hours) {
+		return (hours < 10 ? '0' : '') + hours + ':00';
+	},
+	time: function (date) {
+		var h = date.getUTCHours();
+		var m = date.getUTCMinutes();
+		return (h < 10 ? '0' + h : h) + ':' + (m < 10 ? '0' + m : m);
+	}
 };
 
 SkedTape.prototype = {
@@ -32,12 +62,12 @@ SkedTape.prototype = {
 	 */
 	setDate: function(date, minHours, maxHours) {
         var midnight = new Date(date);
-        midnight.setHours(0, 0, 0, 0);
+        midnight.setUTCHours(0, 0, 0, 0);
 		var start = new Date(midnight);
-		start.setHours(minHours || 0);
+		start.setUTCHours(minHours || 0);
 		if (maxHours && maxHours != 24) {
 			var end = new Date(midnight.getTime());
-			end.setHours(maxHours);
+			end.setUTCHours(maxHours);
 		} else {
 			var end = new Date(midnight.getTime() + MS_PER_DAY);
 		}
@@ -224,20 +254,20 @@ SkedTape.prototype = {
 		var queue = [];
 		if (firstMidnight > lastMidnight) {
 			// The range is within the same day
-			queue.push({weight: 1, text: formatDate(this.start)})
+			queue.push({weight: 1, text: this.format.date(this.start)})
 		} else {
 			queue.push({
 				weight: getMsToMidnight(this.start) / MS_PER_DAY,
-				text: formatDate(this.start)
+				text: this.format.date(this.start)
 			});
 			for (var day = new Date(firstMidnight); day < lastMidnight;) {
 				day.setTime(day.getTime() + 1000);
-				queue.push({weight: 1, text: formatDate(day)});
+				queue.push({weight: 1, text: this.format.date(day)});
 				day.setTime(day.getTime() + MS_PER_DAY - 1000);
 			}
 			queue.push({
 				weight: getMsFromMidnight(this.end) / MS_PER_DAY,
-				text: formatDate(this.end)
+				text: this.format.date(this.end)
 			});
 		}
 		var totalWeight = queue.reduce(function(total, item) {
@@ -256,11 +286,11 @@ SkedTape.prototype = {
 
 		var tick = new Date(this.start);
 		while (tick.getTime() <= this.end.getTime()) {
-			var hour = tick.getHours();
+			var hour = tick.getUTCHours();
 
 			var $time = $('<time/>')
 				.attr('datetime', tick.toISOString())
-				.text(formatHour(hour === 24 ? 0 : hour));
+				.text(this.format.hours(hour === 24 ? 0 : hour));
 			$('<li/>').append($time).appendTo($ul);
 
 			tick.setTime(tick.getTime() + 60*60*1000);
@@ -350,11 +380,11 @@ SkedTape.prototype = {
 		if (this.showEventTime || this.showEventDuration) {
 			var html = $center.html();
 			if (this.showEventTime) {
-				html += '<br>' + formatHoursMinutes(event.start)
-					+ ' - ' + formatHoursMinutes(event.end);
+				html += '<br>' + this.format.time(event.start)
+					+ ' - ' + this.format.time(event.end);
 			}
 			if (this.showEventDuration) {
-				html += '<br>' + formatDuration(event.start, event.end);
+				html += '<br>' + this.format.duration(event.start, event.end);
 			}
 			$center.html(html);
 		}
@@ -575,36 +605,9 @@ function isValidTimeRange(start, end) {
 function getDurationHours(start, end) {
 	return (end.getTime() - start.getTime()) / 1000 / 60 / 60;
 }
-function formatHour(hour) {
-	var prefix = hour < 10 ? '0' : '';
-	return prefix + hour + ':00';
-}
-function formatHoursMinutes(date) {
-	var h = date.getHours();
-	var m = date.getMinutes();
-	return (h < 10 ? '0' + h : h) + ':' + (m < 10 ? '0' + m : m);
-}
-function formatDuration(start, end) {
-	var format = '';
-	var ms = (end.getTime() - start.getTime());
-	if (ms >= MS_PER_HOUR) {
-		format += Math.floor(ms / MS_PER_HOUR) + 'ч.';
-	}
-	ms %= MS_PER_HOUR;
-	if (ms >= MS_PER_MINUTE) {
-		format += (format ? ' ' : '') + Math.floor(ms / MS_PER_MINUTE) + 'мин.';
-	}
-	return format;
-}
-function formatDate(date) {
-	var d = date.getDate();
-	var m = date.getMonth() + 1;
-	var y = date.getFullYear();
-	return (d < 10 ? '0' + d : d) + '.' + (m < 10 ? '0' + m : m) + '.' + y;
-}
 function getMsFromMidnight(d) {
-	var secs = d.getHours()*60*60 + d.getMinutes()*60 + d.getSeconds();
-	return secs * 1000 + d.getMilliseconds();
+	var secs = d.getUTCHours()*60*60 + d.getUTCMinutes()*60 + d.getUTCSeconds();
+	return secs * 1000 + d.getUTCMilliseconds();
 }
 function getMsToMidnight(d) {
 	return MS_PER_DAY - getMsFromMidnight(d);
@@ -626,7 +629,7 @@ function intersects(a, b) {
 }
 function floorHours(date) {
     var floor = new Date(date);
-    floor.setHours(date.getHours(), 0, 0, 0);
+    floor.setUTCHours(date.getUTCHours(), 0, 0, 0);
     return floor;
 }
 function ceilHours(date) {
@@ -656,10 +659,8 @@ $.fn.skedTape = function(opts) {
 			delete objOpts.events;
 			delete objOpts.start;
 			delete objOpts.end;
-			delete objOpts.date;
             obj = new SkedTape(objOpts);
 			opts.start && opts.end && obj.setTimespan(opts.start, opts.end);
-			opts.date && obj.setDate(opts.date);
 			opts.locations && obj.setLocations(opts.locations);
 			opts.events && obj.setEvents(opts.events);
 			$(this).data($.fn.skedTape.dataKey, obj);
@@ -697,6 +698,7 @@ $.fn.skedTape = function(opts) {
 };
 
 $.fn.skedTape.dataKey = '__SkedTape';
+$.fn.skedTape.format = SkedTape.defaultFormatters;
 
 $.fn.skedTape.defaults = {
 	caption: '',
