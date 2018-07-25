@@ -1,6 +1,6 @@
 {
   "name": "jquery-sked-tape",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Schedule component for jQuery that represents events in tape manner.",
   "main": "dist/jquery.skedTape.js",
   "style": "dist/jquery.skedTape.css",
