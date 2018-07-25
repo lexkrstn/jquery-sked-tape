@@ -426,16 +426,20 @@ SkedTape.prototype = {
 		}, this), 1000);
 
 		setTimeout($.proxy(function() {
+			var bodyClass = TWBS_MAJOR >= 4 ? 'body' : 'content';
+			var template = '<div class="popover" role="tooltip">' +
+				'<div class="arrow"></div>' +
+				'<div class="popover-' + bodyClass + '"></div>' +
+			'</div>';
 			this.$el.find('.sked-tape__event').each(function() {
 				var $entry = $(this);
 				if ($entry.width() >= $entry.data('min-width')) return;
 				if ($.fn.popover) {
 					$entry.popover({
 						trigger: 'hover',
-						title: '--',
 						content: $entry.find('.sked-tape__center').html(),
 						html: true,
-						template: '<div class="popover" role="tooltip"><div class="arrow"></div><div class="popover-body"></div></div>'	,
+						template: template,
 						placement: parseInt($entry[0].style.left) < 50 ? 'right' : 'left'
 					});
 				}
