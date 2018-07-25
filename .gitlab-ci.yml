@@ -1,0 +1,19 @@
+image: node:10.6.0
+
+pages:
+  stage: deploy
+  cache:
+    paths:
+    - node_modules/
+  script:
+  - npm i -g gulp-cli
+  - npm i
+  - gulp build
+  - mkdir public
+  - cp -r dist public
+  - cp index.html public
+  artifacts:
+    paths:
+    - public
+  only:
+    - master

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html class="no-js">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>jQuery.skedTape</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="dist/jquery.skedTape.css">
+    </head>
+    <body>
+        <div id="sked"></div>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+        <script src="dist/jquery.skedTape.js"></script>
+        <script type="text/javascript">
+            var $sked = $('#sked').skedTape({
+                caption: 'Cities',
+                start: yesterday('22:00'),
+                end: today('12:00'),
+                showEventTime: true,
+                showEventDuration: true,
+                locations: {
+                    '1': 'San Francisco',
+                    '2': 'Sydney',
+                    '3': 'New York',
+                    'london': 'London',
+                    '5': 'Copenhagen',
+                    '6': 'Berlin'
+                },
+                events: [
+                    {
+                        name: 'Meeting',
+                        location: 'london',
+                        start: today('04:15'),
+                        end: today('07:30')
+                    },
+                    {
+                        name: 'Meeting',
+                        location: '1',
+                        start: today('10:00'),
+                        end: today('11:30')
+                    },
+                    {
+                        name: 'Meeting with custom class',
+                        location: '2',
+                        start: yesterday('22:00'),
+                        end: today('01:30'),
+                        class: 'custom-class'
+                    },
+                    {
+                        name: 'Disabled meeting',
+                        location: '3',
+                        start: yesterday('22:15'),
+                        end: yesterday('23:30'),
+                        disabled: true
+                    },
+                    {
+                        name: 'Meeting that started early',
+                        location: '6',
+                        start: yesterday('21:45'),
+                        end: today('00:45')
+                    },
+                    {
+                        name: 'Late meeting',
+                        location: '5',
+                        start: today('11:15'),
+                        end: today('13:45')
+                    },
+                ]
+            });
+            $sked.on('skedtape:event:click', function(e) {
+                $sked.skedTape('removeEvent', e.detail.event.id);
+            });
+            $sked.on('skedtape:timeline:click', function(e, api) {
+                try {
+                    $sked.skedTape('addEvent', {
+                        name: 'New meeting',
+                        location: '3',
+                        start: today('03:15'),
+                        end: today('06:00')
+                    });
+                }
+                catch (e) {
+                    if (e.name !== 'SkedTape.CollisionError') throw e;
+                    //alert('Already exists');
+                }
+            });
+
+            function pad(n) {
+                return n > 9 ? n : '0' + n;
+            }
+            function datetime(date, time) {
+                return new Date(date.getFullYear() + '-' + pad(date.getMonth())
+                    + '-' + pad(date.getDate()) + 'T' + time);
+            }
+            function yesterday(time) {
+                var date = new Date();
+                date.setTime(date.getTime() - 24 * 60 * 60 * 1000);
+                return datetime(date, time);
+            }
+            function today(time) {
+                return datetime(new Date(), time);
+            }
+            function tomorrow(time) {
+                var date = new Date();
+                date.setTime(date.getTime() + 24 * 60 * 60 * 1000);
+                return datetime(date, time);
+            }
+        </script>
+    </body>
+</html>
