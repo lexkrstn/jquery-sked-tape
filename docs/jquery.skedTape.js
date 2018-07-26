@@ -558,13 +558,12 @@ SkedTape.prototype = {
 	},
 	handleWheel: function(e) {
 		if (e.ctrlKey) {
-			e.stopPropagation();
-			e.preventDefault();
 			if (e.originalEvent.deltaY < 0) {
 				this.zoomIn();
 			} else {
 				this.zoomOut();
 			}
+			return false;
 		} else if (!e.shiftKey) {
 			var delta = e.originalEvent.deltaY > 0 ? 1 : -1;
 			delta *= this.$frame.width() * 0.9;
@@ -574,6 +573,7 @@ SkedTape.prototype = {
 				this.$frame.scrollLeft(scrollLeft);
 			}
 			this.$frame.animate({ scrollLeft: '+=' + delta }, 200);
+			return false;
 		}
 	}
 };
