@@ -740,7 +740,7 @@ $.fn.skedTape.defaults = {
 };
 
 $.skedTape = function(opts) {
-	return $('<div/>').skedTape($extend(opts || {}, {deferRender: true}));
+	return $('<div/>').skedTape($.extend(opts || {}, {deferRender: true}));
 };
 
 }(jQuery));
