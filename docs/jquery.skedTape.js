@@ -48,13 +48,13 @@ SkedTape.defaultFormatters = {
 };
 
 SkedTape.prototype = {
-	setTimespan: function(start, end) {
+	setTimespan: function(start, end, opts) {
 		if (!isValidTimeRange(start, end)) {
 			throw new Error('Invalid time range: ' + JSON.stringify([start, end]));
 		}
 		this.start = floorHours(start);
 		this.end = ceilHours(end);
-		return this;
+		return this.updateUnlessOption(opts);
 	},
 	/**
 	 * A shorthand for `setTimespan()` that sets timespan between some
@@ -108,15 +108,15 @@ SkedTape.prototype = {
     },
     setLocations: function(locations, opts) {
 		this.locations = $.extend({}, locations);
-		return (!opts || opts.update) ? this.update() : this;
+		return this.updateUnlessOption(opts);
     },
 	addLocations: function(locations, opts) {
 		$.extend(this.locations, locations);
-		return (!opts || opts.update) ? this.update() : this;
+		return this.updateUnlessOption(opts);
     },
     addLocation: function(id, name, opts) {
         this.locations[id] = name;
-        return (!opts || opts.update) ? this.update() : this;
+        return this.updateUnlessOption(opts);
     },
     removeLocation: function(id, opts) {
 		for (var i = this.events.length - 1; i >= 0; --i) {
@@ -125,7 +125,7 @@ SkedTape.prototype = {
 			}
 		}
         delete this.locations[id];
-        return (!opts || opts.update) ? this.update() : this;
+        return this.updateUnlessOption(opts);
 	},
 	getLocation: function(id) {
 		return this.locations[id];
@@ -173,16 +173,16 @@ SkedTape.prototype = {
 
 		this.events.push(newEvent);
 
-		return (this.$timeline && (!opts || opts.update)) ? this.update() : this;
+		return this.updateUnlessOption(opts);
 	},
-	addEvents: function(events) {
+	addEvents: function(events, opts) {
 		events.forEach(function(event) {
 			this.addEvent(event, {update: false});
 		}, this);
-		return this.update();
+		return this.updateUnlessOption(opts);
     },
-    setEvents: function(entries) {
-        return this.removeAllEvents().addEvents(entries);
+    setEvents: function(entries, opts) {
+        return this.removeAllEvents(opts).addEvents(entries, opts);
     },
 	removeEvent: function(eventId, opts) {
 		$.each(this.events, $.proxy(function(i, event) {
@@ -191,12 +191,12 @@ SkedTape.prototype = {
 				return false;
 			}
 		}, this));
-		return (this.$timeline && (!opts || opts.update)) ? this.update() : this;
+		return this.updateUnlessOption(opts);
     },
-    removeAllEvents: function() {
+    removeAllEvents: function(opts) {
         this.$el.find('.sked-tape__event, .sked-tape__gap').remove();
         this.events = [];
-        return this;
+        return this.updateUnlessOption(opts);
     },
 	getEvents: function() {
 		return this.events;
@@ -481,6 +481,9 @@ SkedTape.prototype = {
 	update: function() {
 		return this.render({preserveScroll: true});
 	},
+	updateUnlessOption: function(opts) {
+		return (this.$timeline && (!opts || opts.update)) ? this.update() : this;
+	},
 	makeMouseEvent: function(type, e, props) {
 		var scalar = (e.pageX - this.$timeline.offset().left) / this.$timeline.width();
 		var time = this.start.getTime() + scalar * (this.end.getTime() - this.start.getTime());
@@ -661,9 +664,9 @@ $.fn.skedTape = function(opts) {
 			delete objOpts.end;
 			delete objOpts.deferRender;
             obj = new SkedTape(objOpts);
-			opts.start && opts.end && obj.setTimespan(opts.start, opts.end);
-			opts.locations && obj.setLocations(opts.locations);
-			opts.events && obj.setEvents(opts.events);
+			opts.start && opts.end && obj.setTimespan(opts.start, opts.end, {update: false});
+			opts.locations && obj.setLocations(opts.locations, {update: false});
+			opts.events && obj.setEvents(opts.events, {update: false});
 			$(this).data($.fn.skedTape.dataKey, obj);
 			opts.deferRender || obj.render();
         } else if (cmd) {
