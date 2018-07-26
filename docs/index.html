@@ -12,22 +12,23 @@
         <div class="container">
             <div class="mb-4">
                 <h2 class="mb-3">1. Basic demo</h2>
-                <div id="sked1"></div>
-                <div class="alert alert-primary mt-3">
+                <div class="alert alert-primary mb-3">
                     <ul class="mb-0">
                         <li>Click on an event to delete it.</li>
                         <li>Click on empty space of the timeline to add a new event on predefined position.</li>
                         <li>Use +- keys to change zooming level.</li>
+                        <li>Use vertical mouse wheel to scroll timeline horizontally.</li>
                     </ul>
                 </div>
+                <div id="sked1"></div>
             </div>
             <div class="mb-4">
                     <h2 class="mb-3">2. Deferred rendering demo</h2>
-                    <div id="sked2"></div>
-                    <div class="alert alert-primary mt-3">
+                    <div class="alert alert-primary mb-3">
                         See the sources of this example to know how to initialize
                         the component with its actual rendering postponed.
                     </div>
+                    <div id="sked2"></div>
                 </div>
         </div>
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
@@ -128,6 +129,7 @@
                 end: today(12, 0),
                 showEventTime: true,
                 showEventDuration: true,
+                scrollWithYWheel: true,
                 locations: locations,
                 events: events,
                 formatters: {
@@ -163,7 +165,7 @@
             var $sked2 = $.skedTape({
                 caption: 'Cities',
                 start: yesterday(22, 0),
-                end: today(12, 0),
+                end: tomorrow(0, 0),
                 showEventTime: true,
                 showEventDuration: true,
                 locations: locations,

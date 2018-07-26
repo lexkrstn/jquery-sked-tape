@@ -564,7 +564,7 @@ SkedTape.prototype = {
 				this.zoomOut();
 			}
 			return false;
-		} else if (!e.shiftKey) {
+		} else if (!e.shiftKey && this.scrollWithYWheel) {
 			var delta = e.originalEvent.deltaY > 0 ? 1 : -1;
 			delta *= this.$frame.width() * 0.9;
 			if (this.$frame.queue().length) {
@@ -739,7 +739,11 @@ $.fn.skedTape.defaults = {
 	/**
 	 * Minimum gap to DO NOT highlight adjacent entries.
 	 */
-	minGapHiTime: false
+	minGapHiTime: false,
+	/**
+	 * Enables horizontal timeline scrolling with vertical mouse wheel.
+	 */
+	scrollWithYWheel: false
 };
 
 $.skedTape = function(opts) {

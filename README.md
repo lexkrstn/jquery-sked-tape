@@ -51,6 +51,7 @@ var $sked = $('#sked').skedTape({
 - `maxGapTime` (_int_) Maximum gap between entries to show minutes in milliseconds. Default is 30min.
 - `minGapHiTime` (_int|false_) Minimum gap to DO NOT highlight adjacent entries in milliseconds. Default is false.
 - `formatters` (_object_) Custom date/time formatters. See the notes below.
+- `scrollWithYWheel` (_bool_) Enables horizontal timeline scrolling with vertical mouse wheel. Default is false.
 
 **Available event object options**:
 - `name` (_string_)
