@@ -702,7 +702,7 @@ $.fn.skedTape = function(opts) {
     });
 };
 
-$.fn.skedTape.dataKey = '__SkedTape';
+$.fn.skedTape.dataKey = 'sked-tape';
 $.fn.skedTape.format = SkedTape.defaultFormatters;
 
 $.fn.skedTape.defaults = {
