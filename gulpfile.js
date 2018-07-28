@@ -28,7 +28,7 @@ gulp.task('sass', () => {
 		main = main.pipe(sourcemaps.init())
 	}
 	main = main.pipe(sass({
-			outputStyle: 'compressed',
+			outputStyle: 'expanded',
 			sourcemap: true,
 			includePaths: [
 				//__dirname + '/node_modules/foundation-sites/scss'
