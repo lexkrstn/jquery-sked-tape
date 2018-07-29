@@ -179,6 +179,7 @@
   white-space: nowrap;
   overflow: hidden;
   font-size: 12px;
+  pointer-events: none;
 }
 
 .sked-tape__event {
@@ -196,6 +197,7 @@
   -webkit-transform-style: preserve-3d;
           transform-style: preserve-3d;
   min-width: 10px;
+  cursor: default;
 }
 
 .sked-tape__event:hover {
