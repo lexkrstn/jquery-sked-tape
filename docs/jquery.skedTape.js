@@ -9,6 +9,7 @@ var SkedTape = function(opts) {
 	this.events = [];
 	this.lastEventId = 0;
 	this.format = $.extend({}, SkedTape.defaultFormatters, (opts && opts.formatters) || {});
+	this.tzOffset = !opts || opts.tzOffset == undefined ? -(new Date).getTimezoneOffset() : opts.tzOffset;
 
 	this.$el.on('click', '.sked-tape__event', $.proxy(this.handleEventClick, this));
 	this.$el.on('contextmenu', '.sked-tape__event', $.proxy(this.handleEventContextMenu, this));
@@ -417,7 +418,7 @@ SkedTape.prototype = {
 		return this.$timeIndicator = $('<div class="sked-tape__indicator"/>').hide();
 	},
 	updateTimeIndicatorPos: function() {
-		var now = new Date().getTime();
+		var now = new Date().getTime() + this.tzOffset * MS_PER_MINUTE;
 		var start = this.start.getTime();
 		var end = this.end.getTime();
 		if (now >= start && now <= end) {

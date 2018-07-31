@@ -26,7 +26,8 @@
                     <h2 class="mb-3">2. Deferred rendering demo</h2>
                     <div class="alert alert-primary mb-3">
                         See the sources of this example to know how to initialize
-                        the component with its actual rendering postponed.
+                        the component with its actual rendering postponed. Note
+                        that tzOffset = 0 in this example.
                     </div>
                     <div id="sked2"></div>
                 </div>
@@ -169,7 +170,8 @@
                 showEventTime: true,
                 showEventDuration: true,
                 locations: locations,
-                events: events
+                events: events,
+                tzOffset: 0
             });
             $sked2.appendTo('#sked2').skedTape('render');
         </script>
