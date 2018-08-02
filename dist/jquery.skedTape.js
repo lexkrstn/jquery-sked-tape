@@ -276,10 +276,14 @@ SkedTape.prototype = {
 		var totalWeight = queue.reduce(function(total, item) {
 			return total + item.weight;
 		}, 0);
+		var duration = this.end.getTime() - this.start.getTime();
 		queue.forEach(function(item) {
+			var proportion = item.weight / totalWeight;
 			$('<li/>')
-				.css('width', (item.weight / totalWeight * 100).toFixed(10) + '%')
+				.css('width', (proportion * 100).toFixed(10) + '%')
 				.attr('title', item.text)
+				.addClass('sked-tape__date')
+				.toggleClass('sked-tape__date--short', proportion * duration <= SHORT_DURATION)
 				.appendTo($ul);
 		});
 		return $ul;
@@ -599,6 +603,7 @@ var SECS_PER_DAY = 24 * 60 * 60;
 var MS_PER_DAY = SECS_PER_DAY * 1000;
 var MS_PER_MINUTE = 60 * 1000;
 var MS_PER_HOUR = 60 * MS_PER_MINUTE;
+var SHORT_DURATION = 2 * MS_PER_HOUR - 1; // < this ? .sked-tape__date--short
 
 function eventFromEvent(e) {
 	return !!$(e.target).closest('.sked-tape__event').length;

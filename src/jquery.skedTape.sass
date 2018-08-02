@@ -238,32 +238,40 @@ $skedtape-background-color: white !default
 		list-style: none
 		margin: 0
 		padding: 0
-		> li
+
+	&__date
+		display: block
+		margin: 0
+		padding: 0
+		height: $skedtape-dates-height
+		line-height: $skedtape-dates-height
+		font-size: 13px
+		font-weight: bold
+		text-align: center
+		overflow: hidden
+		white-space: nowrap
+		background: #e0e0e0
+		&:nth-child(odd)
+			background: #eee
+		&:before, &:after
+			content: attr(title)
 			display: block
-			margin: 0
-			padding: 0
-			height: $skedtape-dates-height
-			line-height: $skedtape-dates-height
-			font-size: 13px
-			font-weight: bold
-			text-align: center
+			width: calc(50% - 20px)
+			height: inherit
 			overflow: hidden
-			white-space: nowrap
-			background: #e0e0e0
-			&:nth-child(odd)
-				background: #eee
-			&:before, &:after
-				content: attr(title)
-				display: block
-				width: calc(50% - 20px)
-				height: inherit
-				overflow: hidden
-				text-overflow: ellipsis
-			&:before
-				float: left
-				margin-left: 15px
-				text-align: left
-			&:after
-				float: right
-				margin-right: 15px
-				text-align: right
+			text-overflow: ellipsis
+		&:before
+			float: left
+			margin-left: 15px
+			text-align: left
+		&:after
+			float: right
+			margin-right: 15px
+			text-align: right
+		&--short:before
+			float: none
+			width: auto
+			margin: 0 5px
+			text-align: center
+		&--short:after
+			display: none

@@ -270,7 +270,7 @@
   padding: 0;
 }
 
-.sked-tape__dates > li {
+.sked-tape__date {
   display: block;
   margin: 0;
   padding: 0;
@@ -284,11 +284,11 @@
   background: #e0e0e0;
 }
 
-.sked-tape__dates > li:nth-child(odd) {
+.sked-tape__date:nth-child(odd) {
   background: #eee;
 }
 
-.sked-tape__dates > li:before, .sked-tape__dates > li:after {
+.sked-tape__date:before, .sked-tape__date:after {
   content: attr(title);
   display: block;
   width: calc(50% - 20px);
@@ -297,16 +297,27 @@
   text-overflow: ellipsis;
 }
 
-.sked-tape__dates > li:before {
+.sked-tape__date:before {
   float: left;
   margin-left: 15px;
   text-align: left;
 }
 
-.sked-tape__dates > li:after {
+.sked-tape__date:after {
   float: right;
   margin-right: 15px;
   text-align: right;
+}
+
+.sked-tape__date--short:before {
+  float: none;
+  width: auto;
+  margin: 0 5px;
+  text-align: center;
+}
+
+.sked-tape__date--short:after {
+  display: none;
 }
 
 /*# sourceMappingURL=jquery.skedTape.css.map */
