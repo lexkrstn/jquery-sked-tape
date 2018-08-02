@@ -167,9 +167,11 @@ SkedTape.prototype = {
 			userData: entry.userData
 		};
 
-		var collidedId = this.collide(newEvent);
-		if (collidedId) {
-			throw new SkedTape.CollisionError(collidedId);
+		if (!opts || !opts.allowCollisions) {
+			var collided = this.collide(newEvent);
+			if (collided) {
+				throw new SkedTape.CollisionError(collided.id);
+			}
 		}
 
 		this.events.push(newEvent);
@@ -178,7 +180,7 @@ SkedTape.prototype = {
 	},
 	addEvents: function(events, opts) {
 		events.forEach(function(event) {
-			this.addEvent(event, {update: false});
+			this.addEvent(event, $.extend({}, {update: false}, opts));
 		}, this);
 		return this.updateUnlessOption(opts);
     },
