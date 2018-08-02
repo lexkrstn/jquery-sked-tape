@@ -205,12 +205,12 @@
 }
 
 .sked-tape__event--low-gap {
-  background-color: #79b367;
+  background-color: rgba(51, 175, 12, 0.53);
   border-color: #5ba044;
 }
 
 .sked-tape__event--low-gap:hover {
-  background-color: #6ea75c;
+  background-color: rgba(56, 193, 13, 0.79);
   border-color: #579842;
 }
 

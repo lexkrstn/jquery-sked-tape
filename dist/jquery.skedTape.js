@@ -340,8 +340,8 @@ SkedTape.prototype = {
 					lastEnd = event.end;
 					lastEndTime = lastEnd.getTime();
 					$li.append(this.renderEvent(event));
-					if (this.minGapHiTime !== false && gap >= 0 && gap < this.minGapHiTime) {
-						$li.children()
+					if (this.minGapHiTime !== false && gap < this.minGapHiTime) {
+						$li.children('.sked-tape__event')
 							.filter(':eq(-1), :eq(-2)')
 							.addClass('sked-tape__event--low-gap');
 					}
@@ -674,7 +674,7 @@ $.fn.skedTape = function(opts) {
             obj = new SkedTape(objOpts);
 			opts.start && opts.end && obj.setTimespan(opts.start, opts.end, {update: false});
 			opts.locations && obj.setLocations(opts.locations, {update: false});
-			opts.events && obj.setEvents(opts.events, {update: false});
+			opts.events && obj.setEvents(opts.events, {update: false, allowCollisions: true});
 			$(this).data($.fn.skedTape.dataKey, obj);
 			opts.deferRender || obj.render();
         } else if (cmd) {

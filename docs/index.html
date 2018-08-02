@@ -23,14 +23,14 @@
                 <div id="sked1"></div>
             </div>
             <div class="mb-4">
-                    <h2 class="mb-3">2. Deferred rendering demo</h2>
-                    <div class="alert alert-primary mb-3">
-                        See the sources of this example to know how to initialize
-                        the component with its actual rendering postponed. Note
-                        that tzOffset = 0 in this example.
-                    </div>
-                    <div id="sked2"></div>
+                <h2 class="mb-3">2. Deferred rendering demo</h2>
+                <div class="alert alert-primary mb-3">
+                    See the sources of this example to know how to initialize
+                    the component with its actual rendering postponed. Note
+                    that tzOffset = 0 in this example.
                 </div>
+                <div id="sked2"></div>
+            </div>
         </div>
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
         <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
@@ -55,9 +55,9 @@
                     end: today(7, 30)
                 },
                 {
-                    name: 'Meeting 2',
+                    name: 'Meeting 2 (ovelapping)',
                     location: 'london',
-                    start: today(7, 30),
+                    start: today(6, 30),
                     end: today(9, 15)
                 },
                 {
@@ -133,6 +133,7 @@
                 scrollWithYWheel: true,
                 locations: locations,
                 events: events,
+                minGapHiTime: 60 * 1000, // 1 minute
                 formatters: {
                     date: function (date) {
                         return $.fn.skedTape.format.date(date, 'l', '.');
