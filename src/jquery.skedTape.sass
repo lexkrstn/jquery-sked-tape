@@ -17,7 +17,8 @@ $skedtape-grid: 1px solid $skedtape-grid-color !default
 $skedtape-row-header-padding: 15px !default
 $skedtape-row-header-color: #EFEFEF !default
 $skedtape-legend-row-separator: 1px solid white !default
-$skedtape-entry-row-separator: none !default
+$skedtape-entry-row-separator: 0 !default
+$skedtape-entry-row-gap: 1px
 $skedtape-row-header-gap: 5px solid transparent !default
 $skedtape-row-uneven-color: #FDFDFD !default
 $skedtape-row-even-color: #F4F4F4 !default
@@ -142,19 +143,18 @@ $skedtape-background-color: white !default
 		flex-direction: column
 		align-items: stretch
 
-
-		> li
-			position: relative
-			background-color: $skedtape-row-even-color
-			height: $skedtape-entry-row-height
-			&:nth-child(odd)
-				background-color: $skedtape-row-uneven-color
-			&:first-child
-				border-top: $skedtape-grid
-			&:last-child
-				border-bottom: $skedtape-grid
-			&:not(:last-child)
-				border-bottom: $skedtape-entry-row-separator
+	&__event-row
+		position: relative
+		background-color: $skedtape-row-even-color
+		height: $skedtape-entry-row-height
+		&:nth-child(odd)
+			background-color: $skedtape-row-uneven-color
+		&:first-child
+			border-top: $skedtape-grid
+		&:last-child
+			border-bottom: $skedtape-grid
+		&:not(:last-child)
+			border-bottom: $skedtape-entry-row-separator
 	
 	&__gap
 		display: block
@@ -171,7 +171,8 @@ $skedtape-background-color: white !default
 	&__event
 		background-color: $skedtape-entry-color
 		transition: 200ms background-color
-		height: $skedtape-entry-row-height - 1px
+		top: $skedtape-entry-row-gap
+		bottom: 0
 		display: block
 		position: absolute
 		z-index: 3
@@ -180,9 +181,10 @@ $skedtape-background-color: white !default
 		font-size: 12px
 		color: white
 		border: $skedtape-entry-border
-		transform-style: preserve-3d
+		//transform-style: preserve-3d
 		min-width: 10px
 		cursor: default
+		line-height: 16px
 		&:hover
 			background-color: $skedtape-entry-color-hover
 		&--low-gap
@@ -194,6 +196,8 @@ $skedtape-background-color: white !default
 		&--disabled, &--disabled:hover
 			background-color: #b7b1b1
 			border-color: #a79797
+		@at-root .sked-tape__event-row:first-child &
+			top: 0
 	
 	&__center
 		position: relative
