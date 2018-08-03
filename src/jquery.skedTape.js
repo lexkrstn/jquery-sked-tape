@@ -144,7 +144,7 @@ SkedTape.prototype = {
 	},
 	addEvent: function(entry, opts) {
 		if (!this.locationExists(entry.location)) {
-			throw new Error('Unknown location');
+			throw new Error('Unknown location #' + entry.location);
 		}
 
 		var start = entry.start instanceof Date ? entry.start : new Date(entry.start);
