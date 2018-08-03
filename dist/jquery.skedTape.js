@@ -218,13 +218,19 @@ SkedTape.prototype = {
 		var $aside = $('<div class="sked-tape__aside"/>');
 		$('<div class="sked-tape__caption"/>').text(this.caption).appendTo($aside);
 		var $ul = $('<ul/>').appendTo($aside);
-		$.each(this.locations, function(id, name) {
+		var sortedKeys = Object.keys(this.locations).sort($.proxy(function(a, b) {
+			a = this.locations[a].toLocaleLowerCase();
+			b = this.locations[b].toLocaleLowerCase();
+			return a.localeCompare(b);
+		}, this));
+		$.each(sortedKeys, $.proxy(function(i, key) {
+			var name = this.locations[key];
 			var $span = $('<span/>').text(name);
 			$('<li/>')
 				.attr('title', name)
 				.append($span)
 				.appendTo($ul);
-		});
+		}, this));
 		this.$el.append($aside);
 	},
 	renderTimeWrap: function(oldScroll) {
