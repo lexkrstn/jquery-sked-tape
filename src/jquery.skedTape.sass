@@ -199,6 +199,18 @@ $skedtape-background-color: white !default
 		@at-root .sked-tape__event-row:first-child &
 			top: 0
 	
+	&__preliminary
+		display: block
+		position: absolute
+		border: 2px dashed darken($skedtape-entry-color, 15%)
+		top: $skedtape-entry-row-gap
+		bottom: 0
+		z-index: 4
+		white-space: nowrap
+		overflow: hidden
+		font-size: 12px
+		color: white
+	
 	&__center
 		position: relative
 		top: 50%

@@ -5,7 +5,7 @@ var SkedTape = function(opts) {
 	this.$el = opts && opts.el ? $(opts.el) : $('<div/>');
 	this.el = opts.el instanceof $ ? opts.el[0] : opts.el;
 
-	this.locations = {};
+	this.locations = [];
 	this.events = [];
 	this.lastEventId = 0;
 	this.format = $.extend({}, SkedTape.defaultFormatters, (opts && opts.formatters) || {});
@@ -104,32 +104,52 @@ SkedTape.prototype = {
 	zoomOut: function(dec) {
 		return this.setZoom(this.zoom - (dec || this.zoomStep));
 	},
-	locationExists: function(loc) {
-		return Object.keys(this.locations).indexOf(loc + '') >= 0;
+	locationExists: function(id) {
+		var exists = false;
+		$.each(this.locations, function(i, location) {
+			if (location.id == id) {
+				exists = true;
+				return false;
+			}
+		});
+		return exists;
     },
     setLocations: function(locations, opts) {
-		this.locations = $.extend({}, locations);
+		this.events = [];
+		this.locations = locations;
 		return this.updateUnlessOption(opts);
     },
 	addLocations: function(locations, opts) {
-		$.extend(this.locations, locations);
+		this.locations = this.locations.concat(locations);
 		return this.updateUnlessOption(opts);
     },
-    addLocation: function(id, name, opts) {
-        this.locations[id] = name;
+    addLocation: function(location, opts) {
+        this.locations.append(location);
         return this.updateUnlessOption(opts);
     },
     removeLocation: function(id, opts) {
+		// Remove corresponding events
 		for (var i = this.events.length - 1; i >= 0; --i) {
 			if (this.events[i].location == id) {
 				this.events.splice(i, 1);
 			}
 		}
-        delete this.locations[id];
+		// Remove the location
+		for (var i = 0; i < this.locations.length; ++i) {
+			if (this.locations[i].id == id) {
+				this.locations.splice(i, 1);
+				break;
+			}
+		}
         return this.updateUnlessOption(opts);
 	},
 	getLocation: function(id) {
-		return this.locations[id];
+		for (var i = 0; i < this.locations.length; ++i) {
+			if (this.locations[i].id == id) {
+				return this.locations[i];
+			}
+		}
+		return null;
 	},
 	collide(event) {
 		var collided = null;
@@ -218,16 +238,23 @@ SkedTape.prototype = {
 		var $aside = $('<div class="sked-tape__aside"/>');
 		$('<div class="sked-tape__caption"/>').text(this.caption).appendTo($aside);
 		var $ul = $('<ul/>').appendTo($aside);
-		var sortedKeys = Object.keys(this.locations).sort($.proxy(function(a, b) {
-			a = this.locations[a].toLocaleLowerCase();
-			b = this.locations[b].toLocaleLowerCase();
-			return a.localeCompare(b);
-		}, this));
-		$.each(sortedKeys, $.proxy(function(i, key) {
-			var name = this.locations[key];
-			var $span = $('<span/>').text(name);
+		var locations = this.locations;
+		if (this.sorting && this.orderBy === 'name') {
+			locations = locations.sort(function(a, b) {
+				a = a.name.toLocaleLowerCase();
+				b = b.name.toLocaleLowerCase();
+				return a.localeCompare(b);
+			});
+		}
+		else if (this.sorting && this.orderBy === 'order') {
+			locations = locations.sort(function(a, b) {
+				return (a.order || 0) - (b.order || 0);
+			});
+		}
+		$.each(locations, $.proxy(function(i, location) {
+			var $span = $('<span/>').text(location.name);
 			$('<li/>')
-				.attr('title', name)
+				.attr('title', location.name)
 				.append($span)
 				.appendTo($ul);
 		}, this));
@@ -330,13 +357,13 @@ SkedTape.prototype = {
 		var events = this.events.sort($.proxy(function(a, b) {
 			return a.start.getTime() - b.start.getTime();
 		}, this));
-		$.each(this.locations, $.proxy(function(locationId) {
+		$.each(this.locations, $.proxy(function(i, location) {
 			var $li = $('<li class="sked-tape__event-row"/>')
-				.data('locationId', locationId)
+				.data('locationId', location.id)
 				.appendTo(this.$timeline);
 			var lastEndTime = 0, lastEnd;
 			events.forEach(function(event) {
-				var belongs = event.location == locationId;
+				var belongs = event.location == location.id;
 				var visible = event.end > this.start && event.start < this.end;
 				if (belongs && visible) {
 					var gap = event.start.getTime() - lastEndTime;
@@ -353,6 +380,10 @@ SkedTape.prototype = {
 					}
 				}
 			}, this);
+			// Render preliminary event
+			/*if (this.preliminaryEvent && this.preliminaryEvent.location == location.id) {
+				$li.append(this.renderPreliminary());
+			}*/
 		}, this));
 		return this.$timeline;
 	},
@@ -364,6 +395,10 @@ SkedTape.prototype = {
 				left: this.computeEventOffset(block)
 			})
 			.text(Math.round(gap / MS_PER_MINUTE));
+	},
+	renderPreliminary: function() {
+		var event = this.preliminaryEvent;
+		return this.$preliminary = $('<div class="sked-tape__preliminary"/>');
 	},
 	renderEvent: function(event) {
 		var self = this;
@@ -757,7 +792,17 @@ $.fn.skedTape.defaults = {
 	/**
 	 * Enables horizontal timeline scrolling with vertical mouse wheel.
 	 */
-	scrollWithYWheel: false
+	scrollWithYWheel: false,
+	/**
+	 * Enables sorting of locations.
+	 */
+	sorting: false,
+	/**
+	 * Specifies sorting columns. The property accepts two possible values:
+	 * 'order' (sorting by the property 'order' provided in location objects)
+	 * or 'name' (locale-aware case insensitive comparison by name).
+	 */
+	orderBy: 'order'
 };
 
 $.skedTape = function(opts) {

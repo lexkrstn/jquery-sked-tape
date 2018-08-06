@@ -38,15 +38,14 @@
         <script src="jquery.skedTape.js"></script>
         <script type="text/javascript">
             // --------------------------- Data --------------------------------
-            var locations = {
-                // id => name
-                '1': 'San Francisco',
-                '2': 'Sydney',
-                '3': 'New York',
-                'london': 'London',
-                '5': 'Copenhagen',
-                '6': 'Berlin'
-            };
+            var locations = [
+                {id: '1', name: 'San Francisco'},
+                {id: '2', name: 'Sydney'},
+                {id: '3', name: 'New York'},
+                {id: 'london', name: 'London'},
+                {id: '5', name: 'Copenhagen'},
+                {id: '6', name: 'Berlin'}
+            ];
             var events = [
                 {
                     name: 'Meeting 1',
@@ -190,7 +189,9 @@
                 showEventDuration: true,
                 locations: locations,
                 events: events,
-                tzOffset: 0
+                tzOffset: 0,
+                sorting: true,
+                orderBy: 'name'
             });
             $sked2.appendTo('#sked2').skedTape('render');
         </script>
