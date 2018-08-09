@@ -169,6 +169,7 @@
                 locations: locations.slice(),
                 events: events.slice(),
                 minGapHiTime: 60 * 1000, // 1 minute
+                snapToMins: 1,
                 formatters: {
                     date: function (date) {
                         return $.fn.skedTape.format.date(date, 'l', '.');
@@ -181,16 +182,17 @@
                     },
                 }
             });
+            $sked1.on('skedtape:event:added', function(e) {
+                console.log(e.detail.event);
+            });
             $sked1.on('skedtape:event:click', function(e) {
                 $sked1.skedTape('removeEvent', e.detail.event.id);
             });
             $sked1.on('skedtape:timeline:click', function(e, api) {
                 try {
-                    $sked1.skedTape('addEvent', {
+                    $sked1.skedTape('startAdding', {
                         name: 'New meeting',
-                        location: '3',
-                        start: today(3, 15),
-                        end: today(6, 0)
+                        duration: 60 * 60 * 1000
                     });
                 }
                 catch (e) {

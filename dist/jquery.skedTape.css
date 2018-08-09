@@ -241,9 +241,33 @@
   bottom: 0;
   z-index: 4;
   white-space: nowrap;
-  overflow: hidden;
   font-size: 12px;
   color: white;
+}
+
+.sked-tape__preliminary::before, .sked-tape__preliminary::after {
+  position: absolute;
+  display: block;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+          transform: translateY(-50%);
+  color: #fff;
+  border: 1px solid #e32c1b;
+  background: rgba(227, 44, 27, 0.69);
+  padding: 3px 2px;
+  line-height: 1;
+}
+
+.sked-tape__preliminary::before {
+  content: attr(data-start);
+  right: 100%;
+  margin-right: 5px;
+}
+
+.sked-tape__preliminary::after {
+  content: attr(data-end);
+  left: 100%;
+  margin-left: 5px;
 }
 
 .sked-tape__center {

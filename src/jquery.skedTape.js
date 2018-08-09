@@ -15,6 +15,7 @@ var SkedTape = function(opts) {
 	this.$el.on('contextmenu', '.sked-tape__event', $.proxy(this.handleEventContextMenu, this));
 	this.$el.on('click', '.sked-tape__timeline-wrap', $.proxy(this.handleTimelineClick, this));
 	this.$el.on('contextmenu', '.sked-tape__timeline-wrap', $.proxy(this.handleTimelineContextMenu, this));
+	this.$el.on('mousemove', '.sked-tape__timeline-wrap', $.proxy(this.handleMouseMove, this));
 	this.$el.on('keydown', '.sked-tape__time-frame', $.proxy(this.handleKeyDown, this));
 	this.$el.on('wheel', '.sked-tape__time-frame', $.proxy(this.handleWheel, this));
 	this.$el.on('click', '.sked-tape__intersection', $.proxy(this.handleIntersectionClick, this));
@@ -214,7 +215,9 @@ SkedTape.prototype = {
 
 		this.events.push(newEvent);
 
-		return this.updateUnlessOption(opts);
+		this.updateUnlessOption(opts);
+
+		return newEvent;
 	},
 	addEvents: function(events, opts) {
 		events.forEach(function(event) {
@@ -251,6 +254,18 @@ SkedTape.prototype = {
 			}
 		}, this));
 		return found;
+	},
+	startAdding: function(preliminaryEvent) {
+		this.preliminaryEvent = preliminaryEvent;
+		return this;
+	},
+	cancelAdding: function() {
+		if (this.$preliminary) {
+			this.$preliminary.remove();
+			delete this.$preliminary;
+		}
+		delete this.preliminaryEvent;
+		return this;
 	},
 	renderAside: function() {
 		var $aside = $('<div class="sked-tape__aside"/>');
@@ -402,10 +417,6 @@ SkedTape.prototype = {
 					}
 				}
 			}, this);
-			// Render preliminary event
-			/*if (this.preliminaryEvent && this.preliminaryEvent.location == location.id) {
-				$li.append(this.renderPreliminary());
-			}*/
 		}, this));
 		this.renderIntersections();
 		return this.$timeline;
@@ -440,9 +451,37 @@ SkedTape.prototype = {
 			})
 			.text(Math.round(gap / MS_PER_MINUTE));
 	},
-	renderPreliminary: function() {
+	updatePreliminary: function() {
 		var event = this.preliminaryEvent;
-		return this.$preliminary = $('<div class="sked-tape__preliminary"/>');
+		if (!event) {
+			if (this.$preliminary) {
+				this.$preliminary.remove();
+				delete this.$preliminary;
+			}
+			return;
+		}
+		if (!this.$preliminary) {
+			this.$preliminary = $('<div class="sked-tape__preliminary"/>');
+		}
+		var $location = this.$preliminary.closest('.sked-tape__event-row');
+		if (!$location.length || $location.data('locationId') != event.location) {
+			this.$el.find('.sked-tape__event-row').each(function() {
+				if ($(this).data('locationId') == event.location) {
+					$location = $(this);
+					return false;
+				}
+			});
+			this.$preliminary.remove().appendTo($location);
+		}
+		this.$preliminary
+			.css({
+				width: this.computeEventWidth(event),
+				left: this.computeEventOffset(event)
+			})
+			.attr({
+				'data-start': this.format.time(event.start),
+				'data-end': this.format.time(event.end)
+			});
 	},
 	renderEvent: function(event) {
 		var self = this;
@@ -552,90 +591,6 @@ SkedTape.prototype = {
 		}, this));
 		return intersections;
 	},
-	/**
-	 * Returns the array of arrays each of them contain the list of groups of
-	 * overlapping events. Each event in such group has an intersection at least
-	 * with one other event in the group. E.g. an event A may intersect with
-	 * events B and C, but the former ones may have no intersection.
-	 */
-	/*getOverlapGroups: function() {
-		var groups = [];
-		// Build groups
-		$.each(this.events, $.proxy(function(i, iEvent) {
-			var foundInGroups = false;
-			$.each(groups, $.proxy(function(k, group) {
-				$.each(group, $.proxy(function(j, jEvent) {
-					if (iEvent.location == jEvent.location && findIntersection(iEvent, jEvent)) {
-						foundInGroups = true;
-						group.push(iEvent);
-						return false;
-					}
-				}, this));
-			}, this));
-			if (!foundInGroups) {
-				groups.push([iEvent]);
-			}
-		}, this));
-
-		var doGroupsOverlap = function(a, b) {
-			for (var i = 0; i < a.length; ++i) {
-				for (var j = 0; j < b.length; ++j) {
-					if (a[i] === b[j] && a[i].location == b[j].location)
-						return true;
-				}
-			}
-			return false;
-		};
-
-		var joinGroups = function(a, b) {
-			var all = a.concat(b);
-			var uniq = [];
-			for (var i = 0; i < all.length; ++i) {
-				if (uniq.indexOf(all[i]) < 0)
-					uniq.push(all[i]);
-			}
-			return uniq;
-		}
-		
-		for (var i = groups.length - 1; i >= 0; --i) {
-			if (groups[i].length < 2) {
-				// Get rid of the single-element group
-				groups.splice(i, 1);
-			} else {
-				// Join overlapping groups, i.e. that which contain idental element(s)
-				var hasOverlap = false;
-				for (var j = 0; j < i; ++j) {
-					if (doGroupsOverlap(groups[i], groups[j])) {
-						groups[j] = joinGroups(groups[i], groups[j]);
-						hasOverlap = true;
-					}
-				}
-				if (hasOverlap) {
-					groups.splice(i, 1);
-				}
-			}
-		}
-
-		return groups;
-	},
-	arrangeOverlappingEvents: function() {
-		var groups = this.getOverlapGroups();
-		for (var i = 0; i < this.events; ++i) {
-			delete this.events[i].group;
-		}
-		for (var i = 0; i < groups.length; ++i) {
-			var latest = groups[i][0],
-			    hasActive = false;
-			for (var j = 0; j < groups[i].length; ++j) {
-				var event = groups[i][j];
-				latest = event.start > latest.start ? event : latest;
-				hasActive = hasActive || !!event.active;
-				event.group = groups[i];
-			}
-			if (!hasActive)
-				latest.active = true;
-		}
-	},*/
 	cleanup: function() {
 		if ($.fn.popover) {
 			this.$el.find('.sked-tape__event')
@@ -704,22 +659,24 @@ SkedTape.prototype = {
 		});
 		return events;
 	},
-	makeMouseEvent: function(type, e, props) {
+	pick: function(e) {
 		var scalar = (e.pageX - this.$timeline.offset().left) / this.$timeline.width();
 		var time = this.start.getTime() + scalar * (this.end.getTime() - this.start.getTime());
-		var locationId = false;
-		if (props.detail.event) {
-			locationId = props.detail.event.location;
-		} else {
-			this.$el.find('.sked-tape__event-row').each(function() {
-				var top = $(this).offset().top;
-				var bottom = top + $(this).height();
-				if (e.pageY >= top && e.pageY <= bottom) {
-					locationId = $(this).data('locationId');
-					return false;
-				}
-			});
-		}
+		var locationId;
+		this.$el.find('.sked-tape__event-row').each(function() {
+			var top = $(this).offset().top;
+			var bottom = top + $(this).height();
+			if (e.pageY >= top && e.pageY <= bottom) {
+				locationId = $(this).data('locationId');
+				return false;
+			}
+		});
+		return {
+			locationId: locationId,
+			date: new Date(Math.round(time))
+		};
+	},
+	makeMouseEvent: function(type, e, props) {
 		return $.Event(type, $.extend({}, props, {
 			relatedTarget: e.currentTarget,
 			clientX: e.clientX,
@@ -730,10 +687,7 @@ SkedTape.prototype = {
 			pageY: e.pageY,
 			screenX: e.screenX,
 			screenY: e.screenY,
-			detail: $.extend({
-				locationId: locationId,
-				date: new Date(Math.round(time))
-			}, props.detail)
+			detail: $.extend(this.pick(e), props.detail)
 		}));
 	},
 	handleEventClick: function(e) {
@@ -746,6 +700,9 @@ SkedTape.prototype = {
 	},
 	handleEventContextMenu: function(e) {
 		e.preventDefault();
+		if (this.rmbCancelsAdding && this.preliminaryEvent) {
+			return this.cancelAdding();
+		}
 		var eventId = $(e.currentTarget).data('eventId');
 		var event = this.getEvent(eventId);
 		var jqEvent = this.makeMouseEvent('skedtape:event:contextmenu', e, {
@@ -763,6 +720,9 @@ SkedTape.prototype = {
 	},
 	handleIntersectionContextMenu: function(e) {
 		e.preventDefault();
+		if (this.rmbCancelsAdding && this.preliminaryEvent) {
+			return this.cancelAdding();
+		}
 		var jqEvent = this.makeMouseEvent('skedtape:intersection:contextmenu', e, {
 			detail: { component: this }
 		});
@@ -770,8 +730,38 @@ SkedTape.prototype = {
 		detail.events = this.findEventsAtTime(detail.date, detail.locationId);
 		this.$el.trigger(jqEvent, [this]);
 	},
+	emitStartAdding: function(e) {
+		var event = this.preliminaryEvent;
+		var jqEvent = this.makeMouseEvent('skedtape:event:add', e, {
+			detail: { component: this, event: event }
+		});
+		this.$el.trigger(jqEvent, [this]);
+		if (!jqEvent.isDefaultPrevented()) {
+			try {
+				var newEvent = this.addEvent(event);
+				delete event.duration;
+				delete this.preliminaryEvent;
+				var jqEvent = this.makeMouseEvent('skedtape:event:added', e, {
+					detail: { component: this, event: newEvent }
+				});
+				this.$el.trigger(jqEvent, [this]);
+			}
+			catch (e) {
+				if (e.name !== 'SkedTape.CollisionError') {
+					throw e;
+				}
+				var jqEvent = this.makeMouseEvent('skedtape:event:refused', e, {
+					detail: { component: this, event: event }
+				});
+				this.$el.trigger(jqEvent, [this]);
+			}
+		}
+	},
 	handleTimelineClick: function(e) {
 		if (eventFromEvent(e)) return;
+		if (this.preliminaryEvent) {
+			return this.emitStartAdding(e);
+		}
 		var jqEvent = this.makeMouseEvent('skedtape:timeline:click', e, {
 			detail: { component: this }
 		});
@@ -780,10 +770,32 @@ SkedTape.prototype = {
 	handleTimelineContextMenu: function(e) {
 		if (eventFromEvent(e)) return;
 		e.preventDefault();
+		if (this.rmbCancelsAdding && this.preliminaryEvent) {
+			return this.cancelAdding();
+		}
 		var jqEvent = this.makeMouseEvent('skedtape:timeline:contextmenu', e, {
 			detail: { component: this }
 		});
 		this.$el.trigger(jqEvent, [this]);
+	},
+	handleMouseMove: function(e) {
+		if (!this.preliminaryEvent) return;
+		var info = this.pick(e);
+		var event = this.preliminaryEvent;
+		var start = info.date;
+		if (this.snapToMins) {
+			var hr = floorHours(start);
+			var left = (start.getTime() - hr.getTime()) / MS_PER_MINUTE;
+			var lower = Math.floor(left / this.snapToMins) * this.snapToMins;
+			var min = left - lower < this.snapToMins / 2 ? lower : lower + this.snapToMins;
+			start = new Date(hr.getTime() + Math.round(min * MS_PER_MINUTE));
+		}
+		$.extend(event, {
+			start: start,
+			end: new Date(start.getTime() + event.duration),
+			location: info.locationId
+		});
+		this.updatePreliminary();
 	},
 	handleKeyDown: function(e) {
 		if (e.key === '+') {
@@ -917,7 +929,9 @@ $.fn.skedTape = function(opts) {
                 case 'addEvents':
                 case 'removeEvent':
                 case 'setEvents':
-                case 'removeAllEvents':
+				case 'removeAllEvents':
+				case 'startAdding':
+				case 'cancelAdding':
                 case 'setLocations':
                 case 'addLocation':
                 case 'addLocations':
@@ -1006,7 +1020,16 @@ $.fn.skedTape.defaults = {
 	 * 'order' (sorting by the property 'order' provided in location objects)
 	 * or 'name' (locale-aware case insensitive comparison by name).
 	 */
-	orderBy: 'order'
+	orderBy: 'order',
+	/**
+	 * The number of minutes the preliminary event will be snapped to. To
+	 * disable snapping set any falsy value.
+	 */
+	snapToMins: 1,
+	/**
+	 * Right Mouse Button cancels adding a new event.
+	 */
+	rmbCancelsAdding: true
 };
 
 $.skedTape = function(opts) {
