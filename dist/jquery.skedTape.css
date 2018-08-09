@@ -182,6 +182,16 @@
   pointer-events: none;
 }
 
+.sked-tape__intersection {
+  background: transparent;
+  top: 1px;
+  bottom: 0;
+  display: block;
+  position: absolute;
+  z-index: 4;
+  border: 2px dashed rgba(255, 62, 44, 0.5);
+}
+
 .sked-tape__event {
   background-color: #EC6A5E;
   transition: 200ms background-color;

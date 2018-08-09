@@ -17,6 +17,8 @@ var SkedTape = function(opts) {
 	this.$el.on('contextmenu', '.sked-tape__timeline-wrap', $.proxy(this.handleTimelineContextMenu, this));
 	this.$el.on('keydown', '.sked-tape__time-frame', $.proxy(this.handleKeyDown, this));
 	this.$el.on('wheel', '.sked-tape__time-frame', $.proxy(this.handleWheel, this));
+	this.$el.on('click', '.sked-tape__intersection', $.proxy(this.handleIntersectionClick, this));
+	this.$el.on('contextmenu', '.sked-tape__intersection', $.proxy(this.handleIntersectionContextMenu, this));
 };
 
 SkedTape.defaultFormatters = {
@@ -151,6 +153,22 @@ SkedTape.prototype = {
 		}
 		return null;
 	},
+	getLocations: function() {
+		var locations = this.locations;
+		if (this.sorting && this.orderBy === 'name') {
+			locations = locations.sort(function(a, b) {
+				a = a.name.toLocaleLowerCase();
+				b = b.name.toLocaleLowerCase();
+				return a.localeCompare(b);
+			});
+		}
+		else if (this.sorting && this.orderBy === 'order') {
+			locations = locations.sort(function(a, b) {
+				return (a.order || 0) - (b.order || 0);
+			});
+		}
+		return locations;
+	},
 	collide(event) {
 		var collided = null;
 		this.events.some(function(iEvent) {
@@ -238,20 +256,7 @@ SkedTape.prototype = {
 		var $aside = $('<div class="sked-tape__aside"/>');
 		$('<div class="sked-tape__caption"/>').text(this.caption).appendTo($aside);
 		var $ul = $('<ul/>').appendTo($aside);
-		var locations = this.locations;
-		if (this.sorting && this.orderBy === 'name') {
-			locations = locations.sort(function(a, b) {
-				a = a.name.toLocaleLowerCase();
-				b = b.name.toLocaleLowerCase();
-				return a.localeCompare(b);
-			});
-		}
-		else if (this.sorting && this.orderBy === 'order') {
-			locations = locations.sort(function(a, b) {
-				return (a.order || 0) - (b.order || 0);
-			});
-		}
-		$.each(locations, $.proxy(function(i, location) {
+		$.each(this.getLocations(), $.proxy(function(i, location) {
 			var $span = $('<span/>').text(location.name);
 			$('<li/>')
 				.attr('title', location.name)
@@ -354,29 +359,46 @@ SkedTape.prototype = {
 	},
 	renderTimeRows: function() {
 		this.$timeline = $('<ul class="sked-tape__timeline"/>');
+		// Sort the events by time ascending so that the gap between each two of
+		// them may be determined in a cycle.
 		var events = this.events.sort($.proxy(function(a, b) {
 			return a.start.getTime() - b.start.getTime();
 		}, this));
-		$.each(this.locations, $.proxy(function(i, location) {
+		$.each(this.getLocations(), $.proxy(function(i, location) {
 			var $li = $('<li class="sked-tape__event-row"/>')
 				.data('locationId', location.id)
 				.appendTo(this.$timeline);
+			// Render events
+			var intersections = this.getIntersections(location.id);
 			var lastEndTime = 0, lastEnd;
 			events.forEach(function(event) {
 				var belongs = event.location == location.id;
 				var visible = event.end > this.start && event.start < this.end;
 				if (belongs && visible) {
+					var intersects = false;
+					$.each(intersections, $.proxy(function(i, intersection) {
+						$.each(intersection.events, function(j, jEvent) {
+							if (jEvent.id == event.id) {
+								intersects = true;
+								return false;
+							}
+						});
+						if (intersects) return false;
+					}, this));
 					var gap = event.start.getTime() - lastEndTime;
-					if (gap >= this.minGapTime && gap <= this.maxGapTime) {
+					if (gap >= this.minGapTime && gap <= this.maxGapTime && !intersects) {
 						$li.append(this.renderGap(gap, lastEnd, event.start));
 					}
 					lastEnd = event.end;
 					lastEndTime = lastEnd.getTime();
-					$li.append(this.renderEvent(event));
+					var $event = this.renderEvent(event).appendTo($li);
 					if (this.minGapHiTime !== false && gap < this.minGapHiTime) {
 						$li.children('.sked-tape__event')
 							.filter(':eq(-1), :eq(-2)')
 							.addClass('sked-tape__event--low-gap');
+					}
+					else if (intersects) {
+						$event.addClass('sked-tape__event--low-gap');
 					}
 				}
 			}, this);
@@ -385,7 +407,29 @@ SkedTape.prototype = {
 				$li.append(this.renderPreliminary());
 			}*/
 		}, this));
+		this.renderIntersections();
 		return this.$timeline;
+	},
+	renderIntersections: function() {
+		// Remove the stale ones
+		this.$timeline.find('.sked-tape__intersection').remove();
+		// Render the new ones
+		this.$timeline.find('.sked-tape__event-row').each($.proxy(function(i, row) {
+			var $row = $(row);
+			var locationId = $row.data('locationId');
+			var intersections = this.getIntersections(locationId);
+			$.each(intersections, $.proxy(function(i, intersection) {
+				if (intersection.end > this.start && intersection.start < this.end) {
+					$('<div class="sked-tape__intersection"/>')
+						.css({
+							width: this.computeEventWidth(intersection),
+							left: this.computeEventOffset(intersection)
+						})
+						.data('events', intersection.events)
+						.appendTo($row);
+				}
+			}, this));
+		}, this));
 	},
 	renderGap(gap, start, end) {
 		var block = {start: start, end: end};
@@ -412,10 +456,9 @@ SkedTape.prototype = {
 		if (event.class) {
 			$event.addClass(event.class);
 		}
-		if (event.disabled) {
-			$event.addClass('sked-tape__event--disabled');
-		}
 		$event
+			.toggleClass('sked-tape__event--disabled', !!event.disabled)
+			.toggleClass('sked-tape__event--active', !!event.active)
 			.attr('title', event.name)
 			.css({
 				width: this.computeEventWidth(event),
@@ -475,6 +518,124 @@ SkedTape.prototype = {
 			this.$timeIndicator.hide();
 		}
 	},
+	/**
+	 * Returns event intersection list for a specified location.
+	 */
+	getIntersections: function(location) {
+		var intersections = [];
+		var occupied = function(intersection) {
+			for (var i = 0; i < intersections.length; ++i) {
+				if (intersection.start.getTime() == intersections[i].start.getTime() &&
+					intersection.end.getTime() == intersections[i].end.getTime()) {
+					return true;
+				}
+			}
+			return false;
+		};
+		$.each(this.events, $.proxy(function(i, iEvent) {
+			if (iEvent.location != location) {
+				return; // Skip all the events of the other locations
+			}
+			for (var j = i + 1; j < this.events.length; ++j) {
+				var jEvent = this.events[j];
+				if (jEvent.location != location) {
+					continue; // Skip all the events of the other locations
+				}
+				var intersection = findIntersection(iEvent, jEvent);
+				if (intersection && !occupied(intersection)) {
+					// Intersection found and the exact time
+					// is unique (for rendering optimization purposes)
+					intersection.events = [iEvent, jEvent];
+					intersections.push(intersection);
+				}
+			}
+		}, this));
+		return intersections;
+	},
+	/**
+	 * Returns the array of arrays each of them contain the list of groups of
+	 * overlapping events. Each event in such group has an intersection at least
+	 * with one other event in the group. E.g. an event A may intersect with
+	 * events B and C, but the former ones may have no intersection.
+	 */
+	/*getOverlapGroups: function() {
+		var groups = [];
+		// Build groups
+		$.each(this.events, $.proxy(function(i, iEvent) {
+			var foundInGroups = false;
+			$.each(groups, $.proxy(function(k, group) {
+				$.each(group, $.proxy(function(j, jEvent) {
+					if (iEvent.location == jEvent.location && findIntersection(iEvent, jEvent)) {
+						foundInGroups = true;
+						group.push(iEvent);
+						return false;
+					}
+				}, this));
+			}, this));
+			if (!foundInGroups) {
+				groups.push([iEvent]);
+			}
+		}, this));
+
+		var doGroupsOverlap = function(a, b) {
+			for (var i = 0; i < a.length; ++i) {
+				for (var j = 0; j < b.length; ++j) {
+					if (a[i] === b[j] && a[i].location == b[j].location)
+						return true;
+				}
+			}
+			return false;
+		};
+
+		var joinGroups = function(a, b) {
+			var all = a.concat(b);
+			var uniq = [];
+			for (var i = 0; i < all.length; ++i) {
+				if (uniq.indexOf(all[i]) < 0)
+					uniq.push(all[i]);
+			}
+			return uniq;
+		}
+		
+		for (var i = groups.length - 1; i >= 0; --i) {
+			if (groups[i].length < 2) {
+				// Get rid of the single-element group
+				groups.splice(i, 1);
+			} else {
+				// Join overlapping groups, i.e. that which contain idental element(s)
+				var hasOverlap = false;
+				for (var j = 0; j < i; ++j) {
+					if (doGroupsOverlap(groups[i], groups[j])) {
+						groups[j] = joinGroups(groups[i], groups[j]);
+						hasOverlap = true;
+					}
+				}
+				if (hasOverlap) {
+					groups.splice(i, 1);
+				}
+			}
+		}
+
+		return groups;
+	},
+	arrangeOverlappingEvents: function() {
+		var groups = this.getOverlapGroups();
+		for (var i = 0; i < this.events; ++i) {
+			delete this.events[i].group;
+		}
+		for (var i = 0; i < groups.length; ++i) {
+			var latest = groups[i][0],
+			    hasActive = false;
+			for (var j = 0; j < groups[i].length; ++j) {
+				var event = groups[i][j];
+				latest = event.start > latest.start ? event : latest;
+				hasActive = hasActive || !!event.active;
+				event.group = groups[i];
+			}
+			if (!hasActive)
+				latest.active = true;
+		}
+	},*/
 	cleanup: function() {
 		if ($.fn.popover) {
 			this.$el.find('.sked-tape__event')
@@ -532,6 +693,17 @@ SkedTape.prototype = {
 	updateUnlessOption: function(opts) {
 		return (this.$timeline && (!opts || opts.update)) ? this.update() : this;
 	},
+	findEventsAtTime(date, locationId) {
+		var time = date.getTime();
+		var events = [];
+		$.each(this.getEvents(), function(i, event) {
+			if (event.location == locationId &&
+				event.start.getTime() <= time && event.end.getTime() >= time) {
+				events.push(event);
+			}
+		});
+		return events;
+	},
 	makeMouseEvent: function(type, e, props) {
 		var scalar = (e.pageX - this.$timeline.offset().left) / this.$timeline.width();
 		var time = this.start.getTime() + scalar * (this.end.getTime() - this.start.getTime());
@@ -579,6 +751,23 @@ SkedTape.prototype = {
 		var jqEvent = this.makeMouseEvent('skedtape:event:contextmenu', e, {
 			detail: { component: this, event: event }
 		});
+		this.$el.trigger(jqEvent, [this]);
+	},
+	handleIntersectionClick: function(e) {
+		var jqEvent = this.makeMouseEvent('skedtape:intersection:click', e, {
+			detail: { component: this }
+		});
+		var detail = jqEvent.detail;
+		detail.events = this.findEventsAtTime(detail.date, detail.locationId);
+		this.$el.trigger(jqEvent, [this]);
+	},
+	handleIntersectionContextMenu: function(e) {
+		e.preventDefault();
+		var jqEvent = this.makeMouseEvent('skedtape:intersection:contextmenu', e, {
+			detail: { component: this }
+		});
+		var detail = jqEvent.detail;
+		detail.events = this.findEventsAtTime(detail.date, detail.locationId);
 		this.$el.trigger(jqEvent, [this]);
 	},
 	handleTimelineClick: function(e) {
@@ -647,7 +836,7 @@ var MS_PER_HOUR = 60 * MS_PER_MINUTE;
 var SHORT_DURATION = 2 * MS_PER_HOUR - 1; // < this ? .sked-tape__date--short
 
 function eventFromEvent(e) {
-	return !!$(e.target).closest('.sked-tape__event').length;
+	return !!$(e.target).closest('.sked-tape__event, .sked-tape__intersection').length;
 }
 function isValidTimeRange(start, end) {
 	var correctTypes = start instanceof Date && end instanceof Date;
@@ -750,6 +939,21 @@ $.fn.skedTape = function(opts) {
         }
     });
 };
+
+function findIntersection(a, b) {
+    var min = a.start < b.start  ? a : b;
+    var max = min == a ? b : a;
+
+    //min ends before max starts -> no intersection
+    if (min.end < max.start) {
+		return null;
+	}
+
+    return {
+		start: max.start ,
+		end: min.end < max.end ? min.end : max.end
+	};
+}
 
 $.fn.skedTape.dataKey = 'sked-tape';
 $.fn.skedTape.format = SkedTape.defaultFormatters;

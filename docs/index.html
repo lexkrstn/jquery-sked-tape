@@ -60,6 +60,24 @@
                     end: today(9, 15)
                 },
                 {
+                    name: 'Meeting 3 (ovelapping)',
+                    location: 'london',
+                    start: today(9, 0),
+                    end: today(11, 30)
+                },
+                {
+                    name: 'Meeting 4 (ovelapping)',
+                    location: 'london',
+                    start: today(7, 45),
+                    end: today(8, 30)
+                },
+                {
+                    name: 'Meeting 5 (ovelapping)',
+                    location: 'london',
+                    start: today(8, 0),
+                    end: today(8, 15)
+                },
+                {
                     name: 'Meeting',
                     location: '1',
                     start: today(0, 0),
@@ -148,8 +166,8 @@
                 showEventTime: true,
                 showEventDuration: true,
                 scrollWithYWheel: true,
-                locations: locations,
-                events: events,
+                locations: locations.slice(),
+                events: events.slice(),
                 minGapHiTime: 60 * 1000, // 1 minute
                 formatters: {
                     date: function (date) {
@@ -187,8 +205,8 @@
                 end: tomorrow(0, 0),
                 showEventTime: true,
                 showEventDuration: true,
-                locations: locations,
-                events: events,
+                locations: locations.slice(),
+                events: events.slice(),
                 tzOffset: 0,
                 sorting: true,
                 orderBy: 'name'
