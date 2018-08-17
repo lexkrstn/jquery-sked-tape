@@ -35,6 +35,8 @@
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
         <script src="//cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
         <script src="//stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/solid.css" integrity="sha384-wnAC7ln+XN0UKdcPvJvtqIH3jOjs9pnKnq9qX68ImXvOGz2JuFoEiCjT8jyZQX2z" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.2.0/css/fontawesome.css" integrity="sha384-HbmWTHay9psM8qyzEKPc8odH4DsOuzdejtnr+OFtDmOcIVnhgReQ4GZBH7uwcjf6" crossorigin="anonymous">
         <script src="jquery.skedTape.js"></script>
         <script type="text/javascript">
             // --------------------------- Data --------------------------------
@@ -180,6 +182,18 @@
                             min: 'мин.'
                         });;
                     },
+                },
+                canAddIntoLocation: function(location, event) {
+                    return location.id !== 'london';
+                },
+                postRenderLocation: function($el, location, canAdd) {
+                    var $icon = $('<i class="fas fa-fw"/>')
+                    if (canAdd) {
+                        $icon.addClass('fa-check text-success');
+                    } else {
+                        $icon.addClass('fa-times text-danger');
+                    }
+                    $el.append(' ').append($icon);
                 }
             });
             $sked1.on('skedtape:event:added', function(e) {

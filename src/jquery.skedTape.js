@@ -257,27 +257,45 @@ SkedTape.prototype = {
 	},
 	startAdding: function(preliminaryEvent) {
 		this.preliminaryEvent = preliminaryEvent;
-		return this;
+		return this.rerenderLocations();
 	},
 	cancelAdding: function() {
+		delete this.preliminaryEvent;
 		if (this.$preliminary) {
 			this.$preliminary.remove();
 			delete this.$preliminary;
+			this.$el.trigger('skedtape:event:addingCanceled');
 		}
-		delete this.preliminaryEvent;
+		return this.rerenderLocations();
+	},
+	isAdding: function() {
+		return !!this.preliminaryEvent;
+	},
+	rerenderLocations: function() {
+		this.$locations.empty().append(this.renderLocations());
 		return this;
+	},
+	renderLocations: function() {
+		var $frag = $(document.createDocumentFragment());
+		$.each(this.getLocations(), $.proxy(function(i, location) {
+			var $span = $('<span/>').text(location.name);
+			if (this.isAdding()) {
+				var canAdd = this.canAddIntoLocation(location, this.preliminaryEvent);
+				this.postRenderLocation($span, location, canAdd);
+			}
+			$('<li/>')
+				.attr('title', location.name)
+				.append($span)
+				.appendTo($frag);
+		}, this));
+		return $frag;
 	},
 	renderAside: function() {
 		var $aside = $('<div class="sked-tape__aside"/>');
 		$('<div class="sked-tape__caption"/>').text(this.caption).appendTo($aside);
-		var $ul = $('<ul/>').appendTo($aside);
-		$.each(this.getLocations(), $.proxy(function(i, location) {
-			var $span = $('<span/>').text(location.name);
-			$('<li/>')
-				.attr('title', location.name)
-				.append($span)
-				.appendTo($ul);
-		}, this));
+		this.$locations = $('<ul/>')
+			.append(this.renderLocations())
+			.appendTo($aside);
 		this.$el.append($aside);
 	},
 	renderTimeWrap: function(oldScroll) {
@@ -779,7 +797,7 @@ SkedTape.prototype = {
 		this.$el.trigger(jqEvent, [this]);
 	},
 	handleMouseMove: function(e) {
-		if (!this.preliminaryEvent) return;
+		if (!this.isAdding()) return;
 		var info = this.pick(e);
 		var event = this.preliminaryEvent;
 		var start = info.date;
@@ -792,9 +810,12 @@ SkedTape.prototype = {
 		}
 		$.extend(event, {
 			start: start,
-			end: new Date(start.getTime() + event.duration),
-			location: info.locationId
+			end: new Date(start.getTime() + event.duration)
 		});
+		var location = this.getLocation(info.locationId);
+		if (this.canAddIntoLocation(location, event)) {
+			event.location = info.locationId;
+		}
 		this.updatePreliminary();
 	},
 	handleKeyDown: function(e) {
@@ -1029,7 +1050,22 @@ $.fn.skedTape.defaults = {
 	/**
 	 * Right Mouse Button cancels adding a new event.
 	 */
-	rmbCancelsAdding: true
+	rmbCancelsAdding: true,
+	/**
+	 * The callback executed to determine whether an event can be added to
+	 * some location while in visual adding mode.
+	 */
+	canAddIntoLocation: function(location, event) { return true; },
+	/**
+	 * The mixin applied to every location DOM element when rendering the sidebar.
+	 * The callback takes 3 arguments: jQuery text element node representing
+	 * the location, the corresponding location object and a boolean value
+	 * specified the result of executing the `canAddIntoLocation()` function on
+	 * the location and preliminary event. Note, the function is designed to
+	 * render some feedback in visual adding mode and is not called out of the
+	 * context.
+	 */
+	postRenderLocation: function($el, location, canAdd) {}
 };
 
 $.skedTape = function(opts) {
