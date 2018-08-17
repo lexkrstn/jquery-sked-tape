@@ -812,9 +812,11 @@ SkedTape.prototype = {
 			start: start,
 			end: new Date(start.getTime() + event.duration)
 		});
-		var location = this.getLocation(info.locationId);
-		if (this.canAddIntoLocation(location, event)) {
-			event.location = info.locationId;
+		if (info.locationId) {
+			var location = this.getLocation(info.locationId);
+			if (this.canAddIntoLocation(location, event)) {
+				event.location = info.locationId;
+			}
 		}
 		this.updatePreliminary();
 	},
