@@ -203,7 +203,7 @@ SkedTape.prototype = {
 			data: entry.data ? $.extend({}, entry.data) : null,
 			url: entry.url || false,
 			disabled: entry.disabled || false,
-			userData: entry.userData
+			userData: $.extend({}, entry.userData || {})
 		};
 
 		if (!opts || !opts.allowCollisions) {
