@@ -16,17 +16,6 @@
   box-sizing: inherit;
 }
 
-.sked-tape ul {
-  list-style-type: none;
-  margin: 0;
-}
-
-.sked-tape ul, .sked-tape li {
-  margin: 0;
-  padding: 0;
-  list-style-type: none;
-}
-
 .sked-tape__aside {
   flex: none;
   max-width: 30%;
@@ -35,18 +24,36 @@
   position: relative;
 }
 
-.sked-tape__aside li {
+.sked-tape__locations {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sked-tape__location {
+  position: relative;
   padding: 0 15px;
   background-color: #EFEFEF;
   line-height: 54px;
   height: 54px;
 }
 
-.sked-tape__aside li:not(:last-of-type) {
+.sked-tape__location:not(:last-child) {
   border-bottom: 1px solid white;
 }
 
-.sked-tape__aside li > span {
+.sked-tape__location--forbidden::before {
+  content: '';
+  position: absolute;
+  display: block;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: repeating-linear-gradient(-45deg, rgba(236, 106, 94, 0.5), rgba(236, 106, 94, 0.5) 10px, rgba(255, 0, 0, 0) 10px, rgba(255, 0, 0, 0) 20px);
+}
+
+.sked-tape__location > span {
   display: inline-block;
   max-width: 100%;
   overflow: hidden;
@@ -97,6 +104,9 @@
 }
 
 .sked-tape__hours > ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
   display: flex;
   height: 24px;
   align-items: center;
@@ -140,6 +150,9 @@
 }
 
 .sked-tape__timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   width: 100%;
   border-left: none;
   display: flex;
@@ -233,7 +246,7 @@
   top: 0;
 }
 
-.sked-tape__preliminary {
+.sked-tape__dummy-event {
   display: block;
   position: absolute;
   border: 2px dashed #e32c1b;
@@ -245,7 +258,7 @@
   color: white;
 }
 
-.sked-tape__preliminary::before, .sked-tape__preliminary::after {
+.sked-tape__dummy-event::before, .sked-tape__dummy-event::after {
   position: absolute;
   display: block;
   top: 50%;
@@ -258,13 +271,13 @@
   line-height: 1;
 }
 
-.sked-tape__preliminary::before {
+.sked-tape__dummy-event::before {
   content: attr(data-start);
   right: 100%;
   margin-right: 5px;
 }
 
-.sked-tape__preliminary::after {
+.sked-tape__dummy-event::after {
   content: attr(data-end);
   left: 100%;
   margin-left: 5px;

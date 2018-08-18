@@ -42,37 +42,45 @@ $skedtape-background-color: white !default
 	*
 		box-sizing: inherit
 
-	ul
-		list-style-type: none
-		margin: 0
-
-	ul, li
-		margin: 0
-		padding: 0
-		list-style-type: none
-
 	&__aside
 		flex: none
 		max-width: 30%
 		padding: 0 !important
 		border-right: $skedtape-row-header-gap
 		position: relative
-		li
-			padding: 0 $skedtape-row-header-padding
-			background-color: $skedtape-row-header-color
-			line-height: $skedtape-entry-row-height
-			height: $skedtape-entry-row-height
 
-			&:not(:last-of-type)
-				border-bottom: $skedtape-legend-row-separator
-			
-			> span
-				display: inline-block
-				max-width: 100%
-				overflow: hidden
-				text-overflow: ellipsis
-				white-space: nowrap
-				word-wrap: normal
+	&__locations
+		margin: 0
+		padding: 0
+		list-style: none
+
+	&__location
+		position: relative
+		padding: 0 $skedtape-row-header-padding
+		background-color: $skedtape-row-header-color
+		line-height: $skedtape-entry-row-height
+		height: $skedtape-entry-row-height
+
+		&:not(:last-child)
+			border-bottom: $skedtape-legend-row-separator
+		
+		&--forbidden::before
+			content: ''
+			position: absolute
+			display: block
+			top: 0
+			bottom: 0
+			left: 0
+			right: 0
+			background: repeating-linear-gradient(-45deg, rgba(236, 106, 94, 0.5), rgba(236, 106, 94, 0.5) 10px, rgba(255, 0, 0, 0) 10px, rgba(255, 0, 0, 0) 20px)
+		
+		> span
+			display: inline-block
+			max-width: 100%
+			overflow: hidden
+			text-overflow: ellipsis
+			white-space: nowrap
+			word-wrap: normal
 
 	&__caption
 		display: block
@@ -106,6 +114,9 @@ $skedtape-background-color: white !default
 		transform-style: preserve-3d
 
 		> ul
+			margin: 0
+			padding: 0
+			list-style: none
 			display: flex
 			height: $skedtape-hour-row-height
 			align-items: center
@@ -137,6 +148,9 @@ $skedtape-background-color: white !default
 		position: relative
 
 	&__timeline
+		list-style: none
+		margin: 0
+		padding: 0
 		width: 100%
 		border-left: none
 		display: flex
@@ -209,7 +223,7 @@ $skedtape-background-color: white !default
 		@at-root .sked-tape__event-row:first-child &
 			top: 0
 	
-	&__preliminary
+	&__dummy-event
 		display: block
 		position: absolute
 		border: 2px dashed darken($skedtape-entry-color, 15%)

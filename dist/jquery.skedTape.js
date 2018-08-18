@@ -52,6 +52,7 @@ SkedTape.defaultFormatters = {
 };
 
 SkedTape.prototype = {
+	constructor: SkedTape,
 	setTimespan: function(start, end, opts) {
 		if (!isValidTimeRange(start, end)) {
 			throw new Error('Invalid time range: ' + JSON.stringify([start, end]));
@@ -203,7 +204,7 @@ SkedTape.prototype = {
 			data: entry.data ? $.extend({}, entry.data) : null,
 			url: entry.url || false,
 			disabled: entry.disabled || false,
-			userData: entry.userData
+			userData: $.extend({}, entry.userData || {})
 		};
 
 		if (!opts || !opts.allowCollisions) {
@@ -255,21 +256,43 @@ SkedTape.prototype = {
 		}, this));
 		return found;
 	},
-	startAdding: function(preliminaryEvent) {
-		this.preliminaryEvent = preliminaryEvent;
+	isEditMode: function() {
+		return this.editMode;
+	},
+	enterEditMode: function() {
+		this.editMode = true;
+		return this;
+	},
+	leaveEditMode: function() {
+		this.isAdding() && this.cancelAdding();
+		this.editMode = false;
+		return this;
+	},
+	startAdding: function(dummyEvent) {
+		this.dummyEvent = dummyEvent;
+		this.moveDummyEvent(this.lastPicked);
+		this.updateDummyEvent();
 		return this.rerenderLocations();
 	},
 	cancelAdding: function() {
-		delete this.preliminaryEvent;
-		if (this.$preliminary) {
-			this.$preliminary.remove();
-			delete this.$preliminary;
+		if (this.dummyEvent) {
+			// Add the dragged event back on the timeline
+			var draggedEvent = this.dummyEvent.draggedEvent;
+			if (draggedEvent) {
+				this.addEvent(draggedEvent);
+			}
+			// Delete the dummy
+			delete this.dummyEvent;
+		}
+		if (this.$dummyEvent) {
+			this.$dummyEvent.remove();
+			delete this.$dummyEvent;
 			this.$el.trigger('skedtape:event:addingCanceled');
 		}
 		return this.rerenderLocations();
 	},
 	isAdding: function() {
-		return !!this.preliminaryEvent;
+		return !!this.dummyEvent;
 	},
 	rerenderLocations: function() {
 		this.$locations.empty().append(this.renderLocations());
@@ -279,21 +302,26 @@ SkedTape.prototype = {
 		var $frag = $(document.createDocumentFragment());
 		$.each(this.getLocations(), $.proxy(function(i, location) {
 			var $span = $('<span/>').text(location.name);
-			if (this.isAdding()) {
-				var canAdd = this.canAddIntoLocation(location, this.preliminaryEvent);
-				this.postRenderLocation($span, location, canAdd);
-			}
-			$('<li/>')
+			$('<li class="sked-tape__location"/>')
 				.attr('title', location.name)
 				.append($span)
 				.appendTo($frag);
+			if (this.isAdding()) {
+				var canAdd = this.canAddIntoLocation(location, this.dummyEvent);
+				this.postRenderLocation($span, location, canAdd);
+			}
 		}, this));
 		return $frag;
+	},
+	postRenderLocation: function($el, location, canAdd) {
+		$el.parent()
+			.toggleClass('sked-tape__location--permitted', canAdd)
+			.toggleClass('sked-tape__location--forbidden', !canAdd);
 	},
 	renderAside: function() {
 		var $aside = $('<div class="sked-tape__aside"/>');
 		$('<div class="sked-tape__caption"/>').text(this.caption).appendTo($aside);
-		this.$locations = $('<ul/>')
+		this.$locations = $('<ul class="sked-tape__locations"/>')
 			.append(this.renderLocations())
 			.appendTo($aside);
 		this.$el.append($aside);
@@ -469,29 +497,23 @@ SkedTape.prototype = {
 			})
 			.text(Math.round(gap / MS_PER_MINUTE));
 	},
-	updatePreliminary: function() {
-		var event = this.preliminaryEvent;
-		if (!event) {
-			if (this.$preliminary) {
-				this.$preliminary.remove();
-				delete this.$preliminary;
+	updateDummyEvent: function() {
+		if (!this.isAdding()) {
+			// Remove its node from the timline
+			if (this.$dummyEvent) {
+				this.$dummyEvent.remove();
+				delete this.$dummyEvent;
 			}
 			return;
 		}
-		if (!this.$preliminary) {
-			this.$preliminary = $('<div class="sked-tape__preliminary"/>');
+		// Create the event if it doesn't exist
+		var event = this.dummyEvent;
+		if (!this.$dummyEvent) {
+			this.$dummyEvent = $('<div/>');
 		}
-		var $location = this.$preliminary.closest('.sked-tape__event-row');
-		if (!$location.length || $location.data('locationId') != event.location) {
-			this.$el.find('.sked-tape__event-row').each(function() {
-				if ($(this).data('locationId') == event.location) {
-					$location = $(this);
-					return false;
-				}
-			});
-			this.$preliminary.remove().appendTo($location);
-		}
-		this.$preliminary
+		// Apply the className, attributes and styles
+		this.$dummyEvent[0].className = 'sked-tape__dummy-event ' + (event.className || '');
+		this.$dummyEvent
 			.css({
 				width: this.computeEventWidth(event),
 				left: this.computeEventOffset(event)
@@ -500,6 +522,17 @@ SkedTape.prototype = {
 				'data-start': this.format.time(event.start),
 				'data-end': this.format.time(event.end)
 			});
+		// Append to an appropriate location dom node
+		var $location = this.$dummyEvent.closest('.sked-tape__event-row');
+		if (!$location.length || $location.data('locationId') != event.location) {
+			this.$el.find('.sked-tape__event-row').each(function() {
+				if ($(this).data('locationId') == event.location) {
+					$location = $(this);
+					return false;
+				}
+			});
+			this.$dummyEvent.remove().appendTo($location);
+		}
 	},
 	renderEvent: function(event) {
 		var self = this;
@@ -510,8 +543,8 @@ SkedTape.prototype = {
 			var $event = $('<div/>');
 		}
 		$event.addClass('sked-tape__event');
-		if (event.class) {
-			$event.addClass(event.class);
+		if (event.className) {
+			$event.addClass(event.className);
 		}
 		$event
 			.toggleClass('sked-tape__event--disabled', !!event.disabled)
@@ -711,14 +744,34 @@ SkedTape.prototype = {
 	handleEventClick: function(e) {
 		var eventId = $(e.currentTarget).data('eventId');
 		var event = this.getEvent(eventId);
-		var jqEvent = this.makeMouseEvent('skedtape:event:click', e, {
-			detail: { component: this, event: event }
-		});
-		this.$el.trigger(jqEvent, [this]);
+		if (this.isEditMode()) {
+			// Skip if some event is being dragged right now
+			if (this.isAdding()) return;
+			// Make sure the event is allowed to be draggable
+			var canDragEvent = typeof this.canDragEvent === 'function'
+				? this.canDragEvent(event)
+				: this.canDragEvent;
+			if (canDragEvent) {
+				// Remove it from the timeline and begin positioning
+				this.removeEvent(eventId);
+				this.startAdding({
+					name: event.name,
+					duration: event.end.getTime() - event.start.getTime(),
+					userData: $.extend({}, event.userData || {}),
+					draggedEvent: event
+				});
+			}
+		} else {
+			// Emit event click event
+			var jqEvent = this.makeMouseEvent('skedtape:event:click', e, {
+				detail: { component: this, event: event }
+			});
+			this.$el.trigger(jqEvent, [this]);
+		}
 	},
 	handleEventContextMenu: function(e) {
 		e.preventDefault();
-		if (this.rmbCancelsAdding && this.preliminaryEvent) {
+		if (this.rmbCancelsAdding && this.isAdding()) {
 			return this.cancelAdding();
 		}
 		var eventId = $(e.currentTarget).data('eventId');
@@ -738,7 +791,7 @@ SkedTape.prototype = {
 	},
 	handleIntersectionContextMenu: function(e) {
 		e.preventDefault();
-		if (this.rmbCancelsAdding && this.preliminaryEvent) {
+		if (this.rmbCancelsAdding && this.isAdding()) {
 			return this.cancelAdding();
 		}
 		var jqEvent = this.makeMouseEvent('skedtape:intersection:contextmenu', e, {
@@ -748,21 +801,26 @@ SkedTape.prototype = {
 		detail.events = this.findEventsAtTime(detail.date, detail.locationId);
 		this.$el.trigger(jqEvent, [this]);
 	},
-	emitStartAdding: function(e) {
-		var event = this.preliminaryEvent;
+	completeAdding: function(e) {
+		// Emit the event coming before actual addition
+		var event = this.dummyEvent;
 		var jqEvent = this.makeMouseEvent('skedtape:event:add', e, {
 			detail: { component: this, event: event }
 		});
 		this.$el.trigger(jqEvent, [this]);
+		// Add event if the operation hasn't been canceled by any event handler
 		if (!jqEvent.isDefaultPrevented()) {
 			try {
 				var newEvent = this.addEvent(event);
 				delete event.duration;
-				delete this.preliminaryEvent;
+				delete this.dummyEvent;
+				this.$dummyEvent.remove();
+				delete this.$dummyEvent;
 				var jqEvent = this.makeMouseEvent('skedtape:event:added', e, {
 					detail: { component: this, event: newEvent }
 				});
 				this.$el.trigger(jqEvent, [this]);
+				this.rerenderLocations();
 			}
 			catch (e) {
 				if (e.name !== 'SkedTape.CollisionError') {
@@ -777,8 +835,8 @@ SkedTape.prototype = {
 	},
 	handleTimelineClick: function(e) {
 		if (eventFromEvent(e)) return;
-		if (this.preliminaryEvent) {
-			return this.emitStartAdding(e);
+		if (this.isAdding()) {
+			return this.completeAdding(e);
 		}
 		var jqEvent = this.makeMouseEvent('skedtape:timeline:click', e, {
 			detail: { component: this }
@@ -788,7 +846,7 @@ SkedTape.prototype = {
 	handleTimelineContextMenu: function(e) {
 		if (eventFromEvent(e)) return;
 		e.preventDefault();
-		if (this.rmbCancelsAdding && this.preliminaryEvent) {
+		if (this.rmbCancelsAdding && this.isAdding()) {
 			return this.cancelAdding();
 		}
 		var jqEvent = this.makeMouseEvent('skedtape:timeline:contextmenu', e, {
@@ -796,11 +854,9 @@ SkedTape.prototype = {
 		});
 		this.$el.trigger(jqEvent, [this]);
 	},
-	handleMouseMove: function(e) {
-		if (!this.isAdding()) return;
-		var info = this.pick(e);
-		var event = this.preliminaryEvent;
-		var start = info.date;
+	moveDummyEvent: function(picked) {
+		var event = this.dummyEvent;
+		var start = picked.date;
 		if (this.snapToMins) {
 			var hr = floorHours(start);
 			var left = (start.getTime() - hr.getTime()) / MS_PER_MINUTE;
@@ -812,13 +868,18 @@ SkedTape.prototype = {
 			start: start,
 			end: new Date(start.getTime() + event.duration)
 		});
-		if (info.locationId) {
-			var location = this.getLocation(info.locationId);
+		if (picked.locationId) {
+			var location = this.getLocation(picked.locationId);
 			if (this.canAddIntoLocation(location, event)) {
-				event.location = info.locationId;
+				event.location = picked.locationId;
 			}
 		}
-		this.updatePreliminary();
+	},
+	handleMouseMove: function(e) {
+		this.lastPicked = this.pick(e);
+		if (!this.isAdding()) return;
+		this.moveDummyEvent(this.lastPicked);
+		this.updateDummyEvent();
 	},
 	handleKeyDown: function(e) {
 		if (e.key === '+') {
@@ -947,29 +1008,21 @@ $.fn.skedTape = function(opts) {
                 case 'destroy':
                     obj.destroy();
                     $(this).removeData($.fn.skedTape.dataKey).remove();
-                    break;
-                case 'addEvent':
-                case 'addEvents':
-                case 'removeEvent':
-                case 'setEvents':
-				case 'removeAllEvents':
-				case 'startAdding':
-				case 'cancelAdding':
-                case 'setLocations':
-                case 'addLocation':
-                case 'addLocations':
-                case 'removeLocation':
-                case 'setTimespan':
-                case 'setDate':
-                case 'zoomIn':
-                case 'zoomOut':
-                case 'setZoom':
-				case 'resetZoom':
-				case 'render':
-                    obj[cmd].apply(obj, args);
-                    break;
-                default:
-                    throw new Error('SkedTape plugin cannot recognize command');
+					break;
+				default:
+					var methods = [
+						'addEvent',  'addEvents', 'removeEvent', 'setEvents',
+						'removeAllEvents', 'enterEditMode', 'leaveEditMode',
+						'startAdding', 'cancelAdding', 'setLocations',
+						'addLocation', 'addLocations', 'removeLocation',
+						'setTimespan', 'setDate', 'zoomIn', 'zoomOut', 'setZoom',
+						'resetZoom', 'render'
+					];
+					if (methods.indexOf(cmd) >= 0) {
+                    	obj[cmd].apply(obj, args);
+					} else {
+						throw new Error('SkedTape plugin cannot recognize command');
+					}
             }
         } else {
             throw new Error('SkedType plugin has been initialized yet');
@@ -1025,7 +1078,7 @@ $.fn.skedTape.defaults = {
 	/**
 	 * Maximum gap between entries to show minutes.
 	 */
-	maxGapTime: 30 * MS_PER_MINUTE,
+	maxGapTime: 60 * MS_PER_MINUTE - 1,
 	/**
 	 * Minimum gap to DO NOT highlight adjacent entries.
 	 */
@@ -1045,7 +1098,7 @@ $.fn.skedTape.defaults = {
 	 */
 	orderBy: 'order',
 	/**
-	 * The number of minutes the preliminary event will be snapped to. To
+	 * The number of minutes the dummy event will be snapped to. To
 	 * disable snapping set any falsy value.
 	 */
 	snapToMins: 1,
@@ -1063,11 +1116,17 @@ $.fn.skedTape.defaults = {
 	 * The callback takes 3 arguments: jQuery text element node representing
 	 * the location, the corresponding location object and a boolean value
 	 * specified the result of executing the `canAddIntoLocation()` function on
-	 * the location and preliminary event. Note, the function is designed to
+	 * the location and dummy event. Note, the function is designed to
 	 * render some feedback in visual adding mode and is not called out of the
 	 * context.
 	 */
-	postRenderLocation: function($el, location, canAdd) {}
+	postRenderLocation: function($el, location, canAdd) {
+		SkedTape.prototype.postRenderLocation.call(this, $el, location, canAdd);
+	},
+	/**
+	 * The callback that may disallow dragging an event while in edit mode.
+	 */
+	canDragEvent: function(event) { return true; }
 };
 
 $.skedTape = function(opts) {

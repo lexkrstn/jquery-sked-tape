@@ -172,6 +172,7 @@
                 events: events.slice(),
                 minGapHiTime: 60 * 1000, // 1 minute
                 snapToMins: 1,
+                editMode: true,
                 formatters: {
                     date: function (date) {
                         return $.fn.skedTape.format.date(date, 'l', '.');
@@ -185,7 +186,7 @@
                 },
                 canAddIntoLocation: function(location, event) {
                     return location.id !== 'london';
-                },
+                }/*,
                 postRenderLocation: function($el, location, canAdd) {
                     var $icon = $('<i class="fas fa-fw"/>')
                     if (canAdd) {
@@ -194,7 +195,7 @@
                         $icon.addClass('fa-times text-danger');
                     }
                     $el.append(' ').append($icon);
-                }
+                }*/
             });
             $sked1.on('skedtape:event:added', function(e) {
                 console.log(e.detail.event);
