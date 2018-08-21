@@ -11,10 +11,10 @@
     <body>
         <div class="container">
             <div class="mb-4">
-                <h2 class="mb-3">1. Basic demo</h2>
+                <h2 class="mb-3">1. All-in-one example</h2>
                 <div class="alert alert-primary mb-3">
                     <ul class="mb-0">
-                        <li>Click on an event to delete it.</li>
+                        <li>Click on an event to move it.</li>
                         <li>Click on empty space of the timeline to add a new event on predefined position.</li>
                         <li>Use +- keys to change zooming level.</li>
                         <li>Use vertical mouse wheel to scroll timeline horizontally.</li>
@@ -170,7 +170,8 @@
                 scrollWithYWheel: true,
                 locations: locations.slice(),
                 events: events.slice(),
-                minGapHiTime: 60 * 1000, // 1 minute
+                maxTimeGapHi: 60 * 1000, // 1 minute
+                minGapTimeBetween: 1 * 60 * 1000,
                 snapToMins: 1,
                 editMode: true,
                 formatters: {
@@ -186,16 +187,11 @@
                 },
                 canAddIntoLocation: function(location, event) {
                     return location.id !== 'london';
-                }/*,
-                postRenderLocation: function($el, location, canAdd) {
-                    var $icon = $('<i class="fas fa-fw"/>')
-                    if (canAdd) {
-                        $icon.addClass('fa-check text-success');
-                    } else {
-                        $icon.addClass('fa-times text-danger');
-                    }
-                    $el.append(' ').append($icon);
-                }*/
+                },
+                postRenderLocation: function($el, location, index, canAdd) {
+                    this.constructor.prototype.postRenderLocation($el, location, index, canAdd);
+                    $el.prepend('<i class="fas fa-thumbtack text-muted"/> ');
+                }
             });
             $sked1.on('skedtape:event:added', function(e) {
                 console.log(e.detail.event);
