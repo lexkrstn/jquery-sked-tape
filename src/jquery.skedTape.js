@@ -703,6 +703,9 @@ SkedTape.prototype = {
 	updateUnlessOption: function(opts) {
 		return (this.$timeline && (!opts || opts.update)) ? this.update() : this;
 	},
+	setSnapToMins: function(mins) {
+		this.snapToMins = mins;
+	},
 	findEventsAtTime(date, locationId) {
 		var time = date.getTime();
 		var events = [];
@@ -1036,7 +1039,7 @@ $.fn.skedTape = function(opts) {
 						'startAdding', 'cancelAdding', 'setLocations',
 						'addLocation', 'addLocations', 'removeLocation',
 						'setTimespan', 'setDate', 'zoomIn', 'zoomOut', 'setZoom',
-						'resetZoom', 'render'
+						'resetZoom', 'render', 'setSnapToMins'
 					];
 					if (methods.indexOf(cmd) >= 0) {
                     	obj[cmd].apply(obj, args);
