@@ -173,14 +173,22 @@ $skedtape-background-color: white !default
 	&__gap
 		display: block
 		height: $skedtape-entry-row-height - 1px
-		line-height: $skedtape-entry-row-height - 1px
+		line-height: 1
 		position: absolute
-		z-index: 3
-		text-align: center
+		z-index: 4
 		white-space: nowrap
-		overflow: hidden
 		font-size: 12px
 		pointer-events: none
+
+	&__gap-text
+		display: block
+		position: absolute
+		left: 50%
+		top: 50%
+		transform: translate(-50%, -50%)
+		background: white
+		border-radius: 0.2em
+		padding: 2px
 	
 	&__intersection
 		background: transparent

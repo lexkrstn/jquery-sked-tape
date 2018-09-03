@@ -185,14 +185,24 @@
 .sked-tape__gap {
   display: block;
   height: 53px;
-  line-height: 53px;
+  line-height: 1;
   position: absolute;
-  z-index: 3;
-  text-align: center;
+  z-index: 4;
   white-space: nowrap;
-  overflow: hidden;
   font-size: 12px;
   pointer-events: none;
+}
+
+.sked-tape__gap-text {
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  -webkit-transform: translate(-50%, -50%);
+          transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 0.2em;
+  padding: 2px;
 }
 
 .sked-tape__intersection {

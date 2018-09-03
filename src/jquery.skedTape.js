@@ -494,12 +494,14 @@ SkedTape.prototype = {
 	},
 	renderGap(gap, start, end) {
 		var block = {start: start, end: end};
-		return $('<span class="sked-tape__gap"/>')
+		var $text = $('<span class="sked-tape__gap-text"/>')
+			.text(Math.round(gap / MS_PER_MINUTE));
+		return $('<div class="sked-tape__gap"/>')
 			.css({
 				width: this.computeEventWidth(block),
 				left: this.computeEventOffset(block)
 			})
-			.text(Math.round(gap / MS_PER_MINUTE));
+			.append($text);
 	},
 	updateDummyEvent: function() {
 		if (!this.isAdding()) {
