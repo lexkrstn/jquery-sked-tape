@@ -329,7 +329,7 @@
 
 .sked-tape__indicator {
   position: absolute;
-  z-index: 3;
+  z-index: 4;
   top: 0;
   bottom: 0;
   border-left: 1px solid #e43828;
