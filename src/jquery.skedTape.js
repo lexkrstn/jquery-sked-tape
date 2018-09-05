@@ -92,10 +92,9 @@ SkedTape.prototype = {
 			return this;
 		}
 		this.zoom = zoom;
-		var $canvas = this.$el.find('.sked-tape__time-canvas');
-		if ($canvas.length) {
-			var minWidth = $canvas.data('orig-min-width') * zoom;
-			$canvas.css('min-width', Math.round(minWidth) + 'px');
+		if (this.$canvas) {
+			var minWidth = this.$canvas.data('orig-min-width') * zoom;
+			this.$canvas.css('min-width', Math.round(minWidth) + 'px');
 		}
 		return this;
 	},
@@ -335,7 +334,7 @@ SkedTape.prototype = {
 		var $wrap = $('<div class="sked-tape__time-wrap"/>').appendTo(this.$el);
 		this.$frame = $('<div class="sked-tape__time-frame" tabindex="0"/>')
 			.appendTo($wrap);
-		var $canvas = $('<div class="sked-tape__time-canvas"/>')
+		this.$canvas = $('<div class="sked-tape__time-canvas"/>')
 			.append($hours)
 			.appendTo(this.$frame);
 		oldScroll && this.$frame.scrollLeft(oldScroll);
@@ -343,14 +342,14 @@ SkedTape.prototype = {
 			.append(this.renderTimeRows())
 			.append(this.renderGrid())
 			.append(this.renderTimeIndicator());
-		var minWidth = $canvas[0].scrollWidth;
-		$canvas
+		var minWidth = this.$canvas[0].scrollWidth;
+		this.$canvas
 			.css('min-width', Math.round(minWidth * this.zoom) + 'px')
 			.data('orig-min-width', minWidth)
 			.append($timelineWrap)
 			.append($hours.clone());
 		if (this.showDates) {
-			$canvas.prepend(this.renderDates());
+			this.$canvas.prepend(this.renderDates());
 		}
 	},
 	renderDates: function() {
@@ -682,19 +681,23 @@ SkedTape.prototype = {
 				'<div class="arrow"></div>' +
 				'<div class="popover-' + bodyClass + '"></div>' +
 			'</div>';
-			this.$el.find('.sked-tape__event').each(function() {
-				var $entry = $(this);
-				if ($entry.width() >= $entry.data('min-width')) return;
-				if ($.fn.popover) {
+			this.$el.find('.sked-tape__event').each($.proxy(function(i, el) {
+				var $entry = $(el);
+				var tooSmall = $entry.width() < $entry.data('min-width');
+				var left = parseFloat($entry[0].style.left);
+				var right = left + parseFloat($entry[0].style.width);
+				var TOLERANCE = 0.01;
+				var overflows = left < -TOLERANCE || right > 100 + TOLERANCE;
+				if ($.fn.popover && (tooSmall || overflows)) {
 					$entry.popover({
 						trigger: 'hover',
 						content: $entry.find('.sked-tape__center').html(),
 						html: true,
 						template: template,
-						placement: parseInt($entry[0].style.left) < 50 ? 'right' : 'left'
+						placement: left < 50 ? 'right' : 'left'
 					});
 				}
-			});
+			}, this));
 		}, this), 0);
 
 		return this;
