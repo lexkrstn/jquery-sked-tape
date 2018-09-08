@@ -19,6 +19,7 @@
 .sked-tape__aside {
   flex: none;
   max-width: 30%;
+  min-width: 100px;
   padding: 0 !important;
   border-right: 5px solid transparent;
   position: relative;
@@ -42,18 +43,11 @@
   border-bottom: 1px solid white;
 }
 
-.sked-tape__location--forbidden::before {
-  content: '';
-  position: absolute;
-  display: block;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: repeating-linear-gradient(-45deg, rgba(236, 106, 94, 0.5), rgba(236, 106, 94, 0.5) 10px, rgba(255, 0, 0, 0) 10px, rgba(255, 0, 0, 0) 20px);
+.sked-tape__location--forbidden {
+  background-image: repeating-linear-gradient(-45deg, rgba(236, 106, 94, 0.5), rgba(236, 106, 94, 0.5) 10px, rgba(255, 0, 0, 0) 10px, rgba(255, 0, 0, 0) 20px);
 }
 
-.sked-tape__location > span {
+.sked-tape__location-text {
   display: inline-block;
   max-width: 100%;
   overflow: hidden;

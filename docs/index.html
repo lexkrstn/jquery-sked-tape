@@ -188,8 +188,8 @@
                 canAddIntoLocation: function(location, event) {
                     return location.id !== 'london';
                 },
-                postRenderLocation: function($el, location, index, canAdd) {
-                    this.constructor.prototype.postRenderLocation($el, location, index, canAdd);
+                postRenderLocation: function($el, location, canAdd) {
+                    this.constructor.prototype.postRenderLocation($el, location, canAdd);
                     $el.prepend('<i class="fas fa-thumbtack text-muted"/> ');
                 }
             });

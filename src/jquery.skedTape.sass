@@ -45,6 +45,7 @@ $skedtape-background-color: white !default
 	&__aside
 		flex: none
 		max-width: 30%
+		min-width: 100px
 		padding: 0 !important
 		border-right: $skedtape-row-header-gap
 		position: relative
@@ -64,23 +65,16 @@ $skedtape-background-color: white !default
 		&:not(:last-child)
 			border-bottom: $skedtape-legend-row-separator
 		
-		&--forbidden::before
-			content: ''
-			position: absolute
-			display: block
-			top: 0
-			bottom: 0
-			left: 0
-			right: 0
-			background: repeating-linear-gradient(-45deg, rgba(236, 106, 94, 0.5), rgba(236, 106, 94, 0.5) 10px, rgba(255, 0, 0, 0) 10px, rgba(255, 0, 0, 0) 20px)
+		&--forbidden
+			background-image: repeating-linear-gradient(-45deg, rgba(236, 106, 94, 0.5), rgba(236, 106, 94, 0.5) 10px, rgba(255, 0, 0, 0) 10px, rgba(255, 0, 0, 0) 20px)
 		
-		> span
-			display: inline-block
-			max-width: 100%
-			overflow: hidden
-			text-overflow: ellipsis
-			white-space: nowrap
-			word-wrap: normal
+	&__location-text
+		display: inline-block
+		max-width: 100%
+		overflow: hidden
+		text-overflow: ellipsis
+		white-space: nowrap
+		word-wrap: normal
 
 	&__caption
 		display: block

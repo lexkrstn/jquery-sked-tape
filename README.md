@@ -19,11 +19,16 @@ var $sked = $('#sked').skedTape({
     end: today(12, 0),       // Timeline ends this date-time (UTC)
     showEventTime: true,     // Whether to show event start-end time
     showEventDuration: true, // Whether to show event duration
-    locations: {
-        '1': 'San Francisco',
-        '2': 'Sydney',
-        // ...
-    },
+    locations: [
+        {id: 1, name: 'San Francisco'}, // required properties only
+        {
+            id: 'london',
+            name: 'Sydney',
+            order: 1, // optional sorting order
+            userData: {...} // optional some custom data to store
+        },
+        ...
+    ],
     events: [
         {
             name: 'Meeting 1',

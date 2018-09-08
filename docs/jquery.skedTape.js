@@ -119,9 +119,16 @@ SkedTape.prototype = {
     },
     setLocations: function(locations, opts) {
 		this.events = [];
-		this.locations = locations;
+		this.locations = locations && locations.map(function(location) {
+			return {
+				id: location.id,
+				name: location.name,
+				order: location.order || 0,
+				userData: location.userData ? $.extend({}, location.userData) : {}
+			};
+		});
 		return this.updateUnlessOption(opts);
-    },
+	},
 	addLocations: function(locations, opts) {
 		this.locations = this.locations.concat(locations);
 		return this.updateUnlessOption(opts);
@@ -295,26 +302,39 @@ SkedTape.prototype = {
 	isAdding: function() {
 		return !!this.dummyEvent;
 	},
+	rerenderLocation: function(id) {
+		var $location = this.$locations.filter(function() {
+			return $(this).data('id') == id;
+		});
+		var location = this.getLocation(id);
+		if ($location.length && location) {
+			$location.replaceWith(this.renderLocation(location));
+		}
+	},
 	rerenderLocations: function() {
 		this.$locations.empty().append(this.renderLocations());
 		return this;
 	},
+	renderLocation: function(location) {
+		var $text = $('<div class="sked-tape__location-text"/>')
+			.text(location.name);
+		var $location = $('<li class="sked-tape__location"/>')
+			.attr({'title': location.name, 'data-id': location.id})
+			.append($text);
+		var canAdd = this.isAdding()
+			? this.canAddIntoLocation(location, this.dummyEvent)
+			: undefined;
+		this.postRenderLocation($text, location, canAdd);
+		return $location;
+	},
 	renderLocations: function() {
 		var $frag = $(document.createDocumentFragment());
 		$.each(this.getLocations(), $.proxy(function(i, location) {
-			var $span = $('<span/>').text(location.name);
-			$('<li class="sked-tape__location"/>')
-				.attr('title', location.name)
-				.append($span)
-				.appendTo($frag);
-			var canAdd = this.isAdding()
-				? this.canAddIntoLocation(location, this.dummyEvent)
-				: undefined;
-			this.postRenderLocation($span, location, i, canAdd);
+			this.renderLocation(location).appendTo($frag);
 		}, this));
 		return $frag;
 	},
-	postRenderLocation: function($el, location, index, canAdd) {
+	postRenderLocation: function($el, location,  canAdd) {
 		if (canAdd !== undefined) {
 			$el.parent()
 				.toggleClass('sked-tape__location--permitted', canAdd)
@@ -1146,14 +1166,14 @@ $.fn.skedTape.defaults = {
 	/**
 	 * The mixin applied to every location DOM element when rendering the sidebar.
 	 * The callback takes 3 arguments: jQuery text element node representing
-	 * the location, the corresponding location object, zero-based index, and a
-	 * boolean value specifying the result of executing the
-	 * `canAddIntoLocation()` function on the location and dummy event.
+	 * the location, the corresponding location object and a boolean value
+	 * specifying the result of executing the `canAddIntoLocation()` function on
+	 * the location and dummy event.
 	 * The value of the last argument is undefined if the function is called
 	 * while no event is being dragged.
 	 */
-	postRenderLocation: function($el, location, index, canAdd) {
-		SkedTape.prototype.postRenderLocation.call(this, $el, location, index, canAdd);
+	postRenderLocation: function($el, location, canAdd) {
+		SkedTape.prototype.postRenderLocation.call(this, $el, location, canAdd);
 	},
 	/**
 	 * The callback that may disallow dragging an event while in edit mode.
