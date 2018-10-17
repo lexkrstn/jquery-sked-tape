@@ -902,6 +902,11 @@ SkedTape.prototype = {
 		});
 		this.$el.trigger(jqEvent, [this]);
 	},
+	/**
+	 * Mutates dummyEvent to conform a position info.
+	 *
+	 * @param {object} picked The position info returned by the pick() function.
+	 */
 	moveDummyEvent: function(picked) {
 		var event = this.dummyEvent;
 		var start = picked.date;
@@ -919,6 +924,7 @@ SkedTape.prototype = {
 		if (picked.locationId) {
 			var location = this.getLocation(picked.locationId);
 			if (this.canAddIntoLocation(location, event)) {
+				this.beforeAddIntoLocation(location, event);
 				event.location = picked.locationId;
 			}
 		}
@@ -1161,8 +1167,20 @@ $.fn.skedTape.defaults = {
 	/**
 	 * The callback executed to determine whether an event can be added to
 	 * some location while in visual adding mode.
+	 * 
+	 * @see beforeAddIntoLocation()
 	 */
 	canAddIntoLocation: function(location, event) { return true; },
+	/**
+	 * The callback executed after a positive result of canAddIntoLocation()
+	 * call and before updating the event. Here you can place any logic that
+	 * mutates the event object given instead of placing it in the checking
+	 * callback directly (which is not the designed behavior and may lead to
+	 * unexpected results).
+	 * 
+	 * @see canAddIntoLocation()
+	 */
+	beforeAddIntoLocation: function(location, event) {},
 	/**
 	 * The mixin applied to every location DOM element when rendering the sidebar.
 	 * The callback takes 3 arguments: jQuery text element node representing

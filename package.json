@@ -5,6 +5,7 @@
   "main": "dist/jquery.skedTape.js",
   "style": "dist/jquery.skedTape.css",
   "scripts": {
+    "build": "gulp build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
