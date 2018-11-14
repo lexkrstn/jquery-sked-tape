@@ -30,8 +30,10 @@ SkedTape.defaultFormatters = {
 		nums = endian === 'm' ? [parseInt(nums[1]), parseInt(nums[2]), nums[0]] : nums;
 		return nums.join(delim || (endian === 'm' ? '/' : '.'));
 	},
-	duration: function (start, end, opts) {
-		var ms = end.getTime() - start.getTime();
+	roundDuration: function(ms) {
+		return ms;
+	},
+	duration: function (ms, opts) {
 		var h = Math.floor(ms / MS_PER_HOUR);
 		var m = Math.floor((ms % MS_PER_HOUR) / MS_PER_MINUTE);
 		var hrs = (opts && opts.hrs) || 'hrs';
@@ -511,7 +513,7 @@ SkedTape.prototype = {
 			}, this));
 		}, this));
 	},
-	renderGap(gap, start, end) {
+	renderGap: function(gap, start, end) {
 		var block = {start: start, end: end};
 		var $text = $('<span class="sked-tape__gap-text"/>')
 			.text(Math.round(gap / MS_PER_MINUTE));
@@ -560,7 +562,6 @@ SkedTape.prototype = {
 		}
 	},
 	renderEvent: function(event) {
-		var self = this;
 		// Create event node
 		if (event.url && !event.disabled) {
 			var $event = $('<a/>').attr('href', event.url);
@@ -585,12 +586,13 @@ SkedTape.prototype = {
 			.appendTo($event);
 		if (this.showEventTime || this.showEventDuration) {
 			var html = $center.html();
+			var duration = this.format.roundDuration(event.end - event.start);
 			if (this.showEventTime) {
 				html += '<br>' + this.format.time(event.start)
-					+ ' - ' + this.format.time(event.end);
+					+ ' - ' + this.format.time(new Date(event.start + duration));
 			}
 			if (this.showEventDuration) {
-				html += '<br>' + this.format.duration(event.start, event.end);
+				html += '<br>' + this.format.duration(duration);
 			}
 			$center.html(html);
 		}

@@ -178,11 +178,11 @@
                     date: function (date) {
                         return $.fn.skedTape.format.date(date, 'l', '.');
                     },
-                    duration: function (start, end, opts) {
-                        return $.fn.skedTape.format.duration(start, end, {
+                    duration: function (ms, opts) {
+                        return $.fn.skedTape.format.duration(ms, {
                             hrs: 'ч.',
                             min: 'мин.'
-                        });;
+                        });
                     },
                 },
                 canAddIntoLocation: function(location, event) {

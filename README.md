@@ -72,6 +72,7 @@ var $sked = $('#sked').skedTape({
 
 Plugin-specific event handlers may be added like this:
 ```javascript
+// The following handler fires on clicking on an event:
 $sked.on('skedtape:event:click', function(e/*, api*/) {
     $sked.skedTape('removeEvent', e.detail.event.id);
     // api.removeEvent(e.detail.event.id)
