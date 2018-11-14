@@ -589,7 +589,7 @@ SkedTape.prototype = {
 			var duration = this.format.roundDuration(event.end - event.start);
 			if (this.showEventTime) {
 				html += '<br>' + this.format.time(event.start)
-					+ ' - ' + this.format.time(new Date(event.start + duration));
+					+ ' - ' + this.format.time(new Date(event.start.getTime() + duration));
 			}
 			if (this.showEventDuration) {
 				html += '<br>' + this.format.duration(duration);
