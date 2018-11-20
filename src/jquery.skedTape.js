@@ -213,6 +213,15 @@ SkedTape.prototype = {
 			disabled: entry.disabled || false,
 			userData: $.extend({}, entry.userData || {})
 		};
+		
+		if (opts && opts.preserveId && entry.id) {
+			if (this.getEvent(entry.id)) {
+				throw new Error('Cannot preserve id: already exists');
+			}
+			newEvent.id = entry.id;
+		} else {
+			newEvent.id = ++this.lastEventId;
+		}
 
 		if (!opts || !opts.allowCollisions) {
 			var collided = this.collide(newEvent);
@@ -289,7 +298,11 @@ SkedTape.prototype = {
 			// Add the dragged event back on the timeline
 			var draggedEvent = this.dummyEvent.draggedEvent;
 			if (draggedEvent) {
-				this.addEvent(draggedEvent);
+				this.addEvent(draggedEvent, {preserveId: true, update: true});
+				var jqEvent = $.Event('event:dragCanceled.skedtape', {
+					detail: { event: draggedEvent }
+				});
+				this.$el.trigger(jqEvent, draggedEvent);
 			}
 			// Delete the dummy
 			delete this.dummyEvent;
@@ -297,7 +310,7 @@ SkedTape.prototype = {
 		if (this.$dummyEvent) {
 			this.$dummyEvent.remove();
 			delete this.$dummyEvent;
-			this.$el.trigger('skedtape:event:addingCanceled');
+			this.$el.trigger('event:addingCanceled.skedtape');
 		}
 		return this.rerenderLocations();
 	},
@@ -782,19 +795,21 @@ SkedTape.prototype = {
 			// Skip if some event is being dragged right now
 			if (this.isAdding()) return;
 			// Make sure the event is allowed to be draggable
-			var canDragEvent = typeof this.canDragEvent === 'function'
-				? this.canDragEvent(event)
-				: this.canDragEvent;
-			if (canDragEvent) {
+			var jqEvent = this.makeMouseEvent('event:dragStart.skedtape', e, {
+				detail: { component: this, event: event }
+			});
+			this.$el.trigger(jqEvent, [this]);
+			if (!jqEvent.isDefaultPrevented()) {
 				// Emit an event delete event
 				var event = this.getEvent(eventId);
-				var jqEvent = this.makeMouseEvent('skedtape:event:removed', e, {
+				var jqEvent = this.makeMouseEvent('event:dragStarted.skedtape', e, {
 					detail: { component: this, event: event }
 				});
 				this.$el.trigger(jqEvent, [this]);
 				// Remove it from the timeline and begin positioning
 				this.removeEvent(eventId);
 				this.startAdding({
+					id: event.id,
 					name: event.name,
 					duration: event.end.getTime() - event.start.getTime(),
 					userData: $.extend({}, event.userData || {}),
@@ -803,7 +818,7 @@ SkedTape.prototype = {
 			}
 		} else {
 			// Emit an event click event
-			var jqEvent = this.makeMouseEvent('skedtape:event:click', e, {
+			var jqEvent = this.makeMouseEvent('event:click.skedtape', e, {
 				detail: { component: this, event: event }
 			});
 			this.$el.trigger(jqEvent, [this]);
@@ -816,13 +831,13 @@ SkedTape.prototype = {
 		}
 		var eventId = $(e.currentTarget).data('eventId');
 		var event = this.getEvent(eventId);
-		var jqEvent = this.makeMouseEvent('skedtape:event:contextmenu', e, {
+		var jqEvent = this.makeMouseEvent('event:contextmenu.skedtape', e, {
 			detail: { component: this, event: event }
 		});
 		this.$el.trigger(jqEvent, [this]);
 	},
 	handleIntersectionClick: function(e) {
-		var jqEvent = this.makeMouseEvent('skedtape:intersection:click', e, {
+		var jqEvent = this.makeMouseEvent('intersection:click.skedtape', e, {
 			detail: { component: this }
 		});
 		var detail = jqEvent.detail;
@@ -834,7 +849,7 @@ SkedTape.prototype = {
 		if (this.rmbCancelsAdding && this.isAdding()) {
 			return this.cancelAdding();
 		}
-		var jqEvent = this.makeMouseEvent('skedtape:intersection:contextmenu', e, {
+		var jqEvent = this.makeMouseEvent('intersection:contextmenu.skedtape', e, {
 			detail: { component: this }
 		});
 		var detail = jqEvent.detail;
@@ -845,14 +860,14 @@ SkedTape.prototype = {
 		var event = this.dummyEvent;
 		// Check for collisions
 		if (this.collide(event)) {
-			var jqEvent = this.makeMouseEvent('skedtape:event:refused', e, {
+			var jqEvent = this.makeMouseEvent('event:dragEndRefused.skedtape', e, {
 				detail: { component: this, event: event }
 			});
 			this.$el.trigger(jqEvent, [this]);
 			return;
 		}
 		// Emit the event coming before actual addition
-		var jqEvent = this.makeMouseEvent('skedtape:event:add', e, {
+		var jqEvent = this.makeMouseEvent('event:dragEnd.skedtape', e, {
 			detail: { component: this, event: event }
 		});
 		this.$el.trigger(jqEvent, [this]);
@@ -861,12 +876,12 @@ SkedTape.prototype = {
 			// At this step there something may have changed by
 			// the callback above, so do the collision check again.
 			try {
-				var newEvent = this.addEvent(event);
+				var newEvent = this.addEvent(event, {preserveId: true, update: true});
 				delete event.duration;
 				delete this.dummyEvent;
 				this.$dummyEvent.remove();
 				delete this.$dummyEvent;
-				var jqEvent = this.makeMouseEvent('skedtape:event:added', e, {
+				var jqEvent = this.makeMouseEvent('event:dragEnded.skedtape', e, {
 					detail: { component: this, event: newEvent }
 				});
 				this.$el.trigger(jqEvent, [this]);
@@ -876,7 +891,7 @@ SkedTape.prototype = {
 				if (e.name !== 'SkedTape.CollisionError') {
 					throw e;
 				}
-				var jqEvent = this.makeMouseEvent('skedtape:event:refused', e, {
+				var jqEvent = this.makeMouseEvent('event:dragEndRefused.skedtape', e, {
 					detail: { component: this, event: event }
 				});
 				this.$el.trigger(jqEvent, [this]);
@@ -888,7 +903,7 @@ SkedTape.prototype = {
 		if (this.isAdding()) {
 			return this.completeAdding(e);
 		}
-		var jqEvent = this.makeMouseEvent('skedtape:timeline:click', e, {
+		var jqEvent = this.makeMouseEvent('timeline:click.skedtape', e, {
 			detail: { component: this }
 		});
 		this.$el.trigger(jqEvent, [this]);
@@ -899,7 +914,7 @@ SkedTape.prototype = {
 		if (this.rmbCancelsAdding && this.isAdding()) {
 			return this.cancelAdding();
 		}
-		var jqEvent = this.makeMouseEvent('skedtape:timeline:contextmenu', e, {
+		var jqEvent = this.makeMouseEvent('timeline:contextmenu.skedtape', e, {
 			detail: { component: this }
 		});
 		this.$el.trigger(jqEvent, [this]);
@@ -1194,11 +1209,7 @@ $.fn.skedTape.defaults = {
 	 */
 	postRenderLocation: function($el, location, canAdd) {
 		SkedTape.prototype.postRenderLocation.call(this, $el, location, canAdd);
-	},
-	/**
-	 * The callback that may disallow dragging an event while in edit mode.
-	 */
-	canDragEvent: function(event) { return true; }
+	}
 };
 
 $.skedTape = function(opts) {

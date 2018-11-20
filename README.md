@@ -81,9 +81,20 @@ $sked.on('skedtape:event:click', function(e/*, api*/) {
 ```
 
 **Available events**:
-- `skedtape:event:click` The detail property contains corresponding event object.
-- `skedtape:event:contextmenu` The detail property contains corresponding event object.
-- `skedtape:timeline:click`
+- `intersection:click.skedtape`
+- `intersection:contextmenu.skedtape`
+- `timeline:click.skedtape`
+- `timeline:contextmenu.skedtape`
+- `event:click.skedtape` The detail property contains corresponding event object.
+- `event:contextmenu.skedtape` The detail property contains corresponding event object.
+
+- `event:dragStart.skedtape`
+- `event:dragStarted.skedtape`
+- `event:dragEnd.skedtape`
+- `event:dragEnded.skedtape`
+- `event:dragEndRefused.skedtape`
+- `skedtape:event:dragCanceled`
+- `skedtape:event:addingCanceled`
 
 **The props in common for all click event/contextmenu events:**
 - `detail.locationId`
