@@ -193,13 +193,13 @@
                     $el.prepend('<i class="fas fa-thumbtack text-muted"/> ');
                 }
             });
-            $sked1.on('skedtape:event:added', function(e) {
+            $sked1.on('event:dragEnded.skedtape', function(e) {
                 console.log(e.detail.event);
             });
-            $sked1.on('skedtape:event:click', function(e) {
+            $sked1.on('event:click.skedtape', function(e) {
                 $sked1.skedTape('removeEvent', e.detail.event.id);
             });
-            $sked1.on('skedtape:timeline:click', function(e, api) {
+            $sked1.on('timeline:click.skedtape', function(e, api) {
                 try {
                     $sked1.skedTape('startAdding', {
                         name: 'New meeting',
