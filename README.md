@@ -57,6 +57,7 @@ var $sked = $('#sked').skedTape({
 - `minGapHiTime` (_int|false_) Minimum gap to DO NOT highlight adjacent entries in milliseconds. Default is false.
 - `formatters` (_object_) Custom date/time formatters. See the notes below.
 - `scrollWithYWheel` (_bool_) Enables horizontal timeline scrolling with vertical mouse wheel. Default is false.
+- `tzOffseet` (_int_) Current timezone offset that affects time indicator line position.
 
 **Available event object options**:
 - `name` (_string_)
