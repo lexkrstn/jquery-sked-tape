@@ -64,7 +64,7 @@ var $sked = $('#sked').skedTape({
 - `location` (_int|string_) Location id (key in locations object).
 - `start`, `end` (_Date_)
 - `url` (_string_) If set the entry will be rendered as anchor with href=url.
-- `class` (_string_) Additional class name for stylizing purposes.
+- `className` (_string_) Additional class name for stylizing purposes.
 - `disabled` (_bool_) Adds the `sked-tape__event--disabled` class. Default is false.
 - `data` (_object_) The data to set with `$.data()` method. The `eventId` is reserved.
 - `userData` (_object_) Any custom data you may store here.
