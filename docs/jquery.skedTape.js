@@ -746,7 +746,7 @@ SkedTape.prototype = {
 	setSnapToMins: function(mins) {
 		this.snapToMins = mins;
 	},
-	findEventsAtTime(date, locationId) {
+	findEventsAtTime: function(date, locationId) {
 		var time = date.getTime();
 		var events = [];
 		$.each(this.getEvents(), function(i, event) {
