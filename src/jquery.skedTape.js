@@ -10,7 +10,8 @@ var SkedTape = function(opts) {
 	this.lastEventId = 0;
 	this.format = $.extend({}, SkedTape.defaultFormatters, (opts && opts.formatters) || {});
 	this.tzOffset = !opts || opts.tzOffset == undefined ? -(new Date).getTimezoneOffset() : opts.tzOffset;
-
+	this.isShowInOffset = !opts || opts.isShowInOffset == undefined ? false : opts.isShowInOffset;
+	
 	this.$el.on('click', '.sked-tape__event', $.proxy(this.handleEventClick, this));
 	this.$el.on('contextmenu', '.sked-tape__event', $.proxy(this.handleEventContextMenu, this));
 	this.$el.on('click', '.sked-tape__timeline-wrap', $.proxy(this.handleTimelineClick, this));
@@ -58,6 +59,11 @@ SkedTape.prototype = {
 	setTimespan: function(start, end, opts) {
 		if (!isValidTimeRange(start, end)) {
 			throw new Error('Invalid time range: ' + JSON.stringify([start, end]));
+		}
+		if (this.isShowInOffset) {
+			var timeOffset = this.tzOffset * 60 * 1000;
+			start = new Date(start.setTime(start.getTime() + timeOffset));
+			end = new Date(end.setTime(end.getTime() + timeOffset));
 		}
 		this.start = floorHours(start);
 		this.end = ceilHours(end);
@@ -195,6 +201,8 @@ SkedTape.prototype = {
 
 		var start = entry.start instanceof Date ? entry.start : new Date(entry.start);
 		var end = entry.end instanceof Date ? entry.end : new Date(entry.end);
+		var startToShow = new Date(start);
+		var endToShow = new Date(end);
 
 		if (!isValidTimeRange(start, end)) {
 			throw new Error('Invalid time range: ' +
@@ -211,7 +219,9 @@ SkedTape.prototype = {
 			url: entry.url || false,
 			className: entry.className || null,
 			disabled: entry.disabled || false,
-			userData: $.extend({}, entry.userData || {})
+			userData: $.extend({}, entry.userData || {}),
+			startToShow: this.isShowInOffset ? new Date(startToShow.setTime(start.getTime() + (this.tzOffset * 60 * 1000))) : startToShow,
+			endToShow: this.isShowInOffset ? new Date(endToShow.setTime(end.getTime() + (this.tzOffset * 60 * 1000))) : endToShow
 		};
 		
 		if (opts && opts.preserveId && entry.id) {
@@ -601,7 +611,7 @@ SkedTape.prototype = {
 			var html = $center.html();
 			var duration = this.format.roundDuration(event.end - event.start);
 			if (this.showEventTime) {
-				html += '<br>' + this.format.time(event.start)
+				html += '<br>' + this.format.time(event.startToShow)
 					+ ' - ' + this.format.time(new Date(event.start.getTime() + duration));
 			}
 			if (this.showEventDuration) {
@@ -631,7 +641,7 @@ SkedTape.prototype = {
 		return durationHours / getDurationHours(this.start, this.end) * 100 + '%';
 	},
 	computeEventOffset: function(event) {
-		var hoursBeforeEvent =  getDurationHours(this.start, event.start);
+		var hoursBeforeEvent =  getDurationHours(this.start, event.startToShow);
 		return hoursBeforeEvent /  getDurationHours(this.start, this.end) * 100 + '%';
 	},
 	renderTimeIndicator: function() {
