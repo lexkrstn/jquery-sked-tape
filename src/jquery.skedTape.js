@@ -638,7 +638,7 @@ SkedTape.prototype = {
 		// Clamp to timeline edge
 		var compare = event.endToShow !== undefined ? event.endToShow : event.end;
 		var eventEnd = this.end < compare ? this.end : compare;
-		var durationHours = getDurationHours(event.startToShow, eventEnd);
+		var durationHours = getDurationHours(event.startToShow !== undefined ? event.startToShow : event.start, eventEnd);
 		return durationHours / getDurationHours(this.start, this.end) * 100 + '%';
 	},
 	computeEventOffset: function(event) {
