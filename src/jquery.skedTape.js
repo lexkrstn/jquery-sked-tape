@@ -11,7 +11,7 @@ var SkedTape = function(opts) {
 	this.format = $.extend({}, SkedTape.defaultFormatters, (opts && opts.formatters) || {});
 	this.tzOffset = !opts || opts.tzOffset == undefined ? -(new Date).getTimezoneOffset() : opts.tzOffset;
 	this.isShowInOffset = !opts || opts.isShowInOffset == undefined ? false : opts.isShowInOffset;
-	
+
 	this.$el.on('click', '.sked-tape__event', $.proxy(this.handleEventClick, this));
 	this.$el.on('contextmenu', '.sked-tape__event', $.proxy(this.handleEventContextMenu, this));
 	this.$el.on('click', '.sked-tape__timeline-wrap', $.proxy(this.handleTimelineClick, this));
@@ -482,7 +482,7 @@ SkedTape.prototype = {
 			var lastEndTime = 0, lastEnd;
 			events.forEach(function(event) {
 				var belongs = event.location == location.id;
-				var visible = event.end > this.start && event.start < this.end;
+				var visible = event.endToShow > this.start && event.startToShow < this.end;
 				if (belongs && visible) {
 					var intersects = false;
 					$.each(intersections, $.proxy(function(i, intersection) {
@@ -612,7 +612,7 @@ SkedTape.prototype = {
 			var duration = this.format.roundDuration(event.end - event.start);
 			if (this.showEventTime) {
 				html += '<br>' + this.format.time(event.startToShow)
-					+ ' - ' + this.format.time(new Date(event.start.getTime() + duration));
+					+ ' - ' + this.format.time(new Date(event.startToShow.getTime() + duration));
 			}
 			if (this.showEventDuration) {
 				html += '<br>' + this.format.duration(duration);
@@ -641,7 +641,7 @@ SkedTape.prototype = {
 		return durationHours / getDurationHours(this.start, this.end) * 100 + '%';
 	},
 	computeEventOffset: function(event) {
-		var hoursBeforeEvent =  getDurationHours(this.start, event.startToShow);
+		var hoursBeforeEvent =  getDurationHours(this.start, event.startToShow !== undefined ? event.startToShow :  event.start);
 		return hoursBeforeEvent /  getDurationHours(this.start, this.end) * 100 + '%';
 	},
 	renderTimeIndicator: function() {
@@ -1121,8 +1121,8 @@ function findIntersection(a, b) {
 	}
 
     return {
-		start: max.start ,
-		end: min.end < max.end ? min.end : max.end
+		start: max.startToShow ,
+		end: min.end < max.end ? min.endToShow : max.endToShow
 	};
 }
 
