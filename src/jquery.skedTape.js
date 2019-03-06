@@ -886,6 +886,11 @@ SkedTape.prototype = {
 			// At this step there something may have changed by
 			// the callback above, so do the collision check again.
 			try {
+				if (this.isShowInOffset) {
+					var timeOffset = this.tzOffset * 60 * 1000;
+					event.start = new Date(event.start.setTime(event.start.getTime() - timeOffset));
+					event.end = new Date(event.end.setTime(event.end.getTime() - timeOffset));
+				}
 				var newEvent = this.addEvent(event, {preserveId: true, update: true});
 				delete event.duration;
 				delete this.dummyEvent;
