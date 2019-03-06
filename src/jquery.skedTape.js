@@ -636,8 +636,9 @@ SkedTape.prototype = {
 	},
 	computeEventWidth: function(event) {
 		// Clamp to timeline edge
-		var eventEnd = this.end < event.end ? this.end : event.end;
-		var durationHours = getDurationHours(event.start, eventEnd);
+		var compare = event.endToShow !== undefined ? event.endToShow : event.end;
+		var eventEnd = this.end < compare ? this.end : compare;
+		var durationHours = getDurationHours(event.startToShow, eventEnd);
 		return durationHours / getDurationHours(this.start, this.end) * 100 + '%';
 	},
 	computeEventOffset: function(event) {
