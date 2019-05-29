@@ -1059,9 +1059,12 @@ $.fn.skedTape = function(opts) {
     var args = cmd ? Array.prototype.slice.call(arguments, 1) : [];
     return this.each(function() {
         var obj = $(this).data($.fn.skedTape.dataKey);
-        if (!obj) {
+        if (!obj || !cmd) {
             if (cmd) {
                 throw new Error('SkedTape plugin hadn\'t been initialized but used');
+			}
+			if (obj) {
+				obj.destroy();
 			}
 			var objOpts = $.extend({}, $.fn.skedTape.defaults, opts, {
 				el: this
@@ -1077,7 +1080,7 @@ $.fn.skedTape = function(opts) {
 			opts.events && obj.setEvents(opts.events, {update: false, allowCollisions: true});
 			$(this).data($.fn.skedTape.dataKey, obj);
 			opts.deferRender || obj.render();
-        } else if (cmd) {
+        } else {
             switch (cmd) {
                 case 'destroy':
                     obj.destroy();
@@ -1098,8 +1101,6 @@ $.fn.skedTape = function(opts) {
 						throw new Error('SkedTape plugin cannot recognize command');
 					}
             }
-        } else {
-            throw new Error('SkedType plugin has been initialized yet');
         }
     });
 };
@@ -1114,7 +1115,7 @@ function findIntersection(a, b) {
 	}
 
     return {
-		start: max.start ,
+		start: max.start,
 		end: min.end < max.end ? min.end : max.end
 	};
 }
