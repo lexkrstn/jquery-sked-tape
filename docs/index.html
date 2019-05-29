@@ -212,7 +212,7 @@
                 }
             });
             // --------------------------- Example 2 ---------------------------
-            var $sked2 = $.skedTape({
+            var sked2Config = {
                 caption: 'Cities',
                 start: yesterday(23, 0),
                 end: tomorrow(0, 0),
@@ -223,8 +223,11 @@
                 tzOffset: 0,
                 sorting: true,
                 orderBy: 'name'
-            });
-            $sked2.appendTo('#sked2').skedTape('render');
+            };
+			var $sked2 = $.skedTape(sked2Config);
+			$sked2.appendTo('#sked2').skedTape('render');
+			$sked2.skedTape('destroy');
+			$sked2.skedTape(sked2Config);
         </script>
     </body>
 </html>

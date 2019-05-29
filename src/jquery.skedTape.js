@@ -681,6 +681,10 @@ SkedTape.prototype = {
 		}, this));
 		return intersections;
 	},
+	destroy: function() {
+		this.cleanup();
+		this.$el.off().empty().removeClass('sked-tape sked-tape--has-dates');
+	},
 	cleanup: function() {
 		if ($.fn.popover) {
 			this.$el.find('.sked-tape__event')
@@ -1077,7 +1081,7 @@ $.fn.skedTape = function(opts) {
             switch (cmd) {
                 case 'destroy':
                     obj.destroy();
-                    $(this).removeData($.fn.skedTape.dataKey).remove();
+                    $(this).removeData($.fn.skedTape.dataKey);
 					break;
 				default:
 					var methods = [
@@ -1212,5 +1216,5 @@ $.fn.skedTape.defaults = {
 };
 
 $.skedTape = function(opts) {
-	return $('<div/>').skedTape($.extend(opts || {}, {deferRender: true}));
+	return $('<div/>').skedTape($.extend({}, opts || {}, {deferRender: true}));
 };
