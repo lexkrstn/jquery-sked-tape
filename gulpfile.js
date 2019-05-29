@@ -7,7 +7,8 @@ const gulp            = require('gulp'),
       gulpif          = require('gulp-if'),
       plumber         = require('gulp-plumber'),
       notify          = require('gulp-notify'),
-      open            = require('gulp-open')
+	  open            = require('gulp-open'),
+	  wrap            = require('gulp-wrap')
 
 const DEBUG = ['prod', 'production'].indexOf(process.env.NODE_ENV) < 0
 
@@ -49,7 +50,8 @@ gulp.task('sass', () => {
 gulp.task('copy-js', () =>
 	gulp.src(`src/*.js`)
         .pipe(plumber(plumberErrorHandler))
-        .pipe(cleanDest('dist'))
+		.pipe(cleanDest('dist'))
+		.pipe(wrap({ src: './umd.template.txt' }))
 		.pipe(gulp.dest('dist'))
 		.pipe(gulpif(TASK_NOTIFICATION, notify({message: 'JS copied'})))
 )

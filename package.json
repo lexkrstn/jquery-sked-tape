@@ -32,6 +32,7 @@
     "gulp-open": "^3.0.1",
     "gulp-plumber": "^1.2.0",
     "gulp-sass": "^4.0.1",
-    "gulp-sourcemaps": "^2.6.4"
+    "gulp-sourcemaps": "^2.6.4",
+    "gulp-wrap": "^0.15.0"
   }
 }

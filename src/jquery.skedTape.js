@@ -1,4 +1,3 @@
-;(function($){
 var SkedTape = function(opts) {
 	$.extend(this, opts);
 
@@ -995,7 +994,7 @@ SkedTape.CollisionError.prototype = Object.create(Error.prototype);
 SkedTape.CollisionError.prototype.name = "SkedTape.CollisionError";
 SkedTape.CollisionError.prototype.constructor = SkedTape.CollisionError;
 
-var TWBS_MAJOR = parseInt($.fn.popover.Constructor.VERSION.charAt(0), 10);
+var TWBS_MAJOR = $.fn.popover ? parseInt($.fn.popover.Constructor.VERSION.charAt(0), 10) : 0;
 var SECS_PER_DAY = 24 * 60 * 60;
 var MS_PER_DAY = SECS_PER_DAY * 1000;
 var MS_PER_MINUTE = 60 * 1000;
@@ -1215,5 +1214,3 @@ $.fn.skedTape.defaults = {
 $.skedTape = function(opts) {
 	return $('<div/>').skedTape($.extend(opts || {}, {deferRender: true}));
 };
-
-}(jQuery));
