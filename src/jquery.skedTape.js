@@ -1,3 +1,5 @@
+var CURRENT_TZ_OFFSET = new Date().getTimezoneOffset();
+
 var SkedTape = function(opts) {
 	$.extend(this, opts);
 
@@ -8,7 +10,6 @@ var SkedTape = function(opts) {
 	this.events = [];
 	this.lastEventId = 0;
 	this.format = $.extend({}, SkedTape.defaultFormatters, (opts && opts.formatters) || {});
-	this.tzOffset = !opts || opts.tzOffset == undefined ? -(new Date).getTimezoneOffset() : opts.tzOffset;
 
 	this.$el.on('click', '.sked-tape__event', $.proxy(this.handleEventClick, this));
 	this.$el.on('contextmenu', '.sked-tape__event', $.proxy(this.handleEventContextMenu, this));
@@ -46,8 +47,8 @@ SkedTape.defaultFormatters = {
 		return (hours < 10 ? '0' : '') + hours + ':00';
 	},
 	time: function (date) {
-		var h = date.getUTCHours();
-		var m = date.getUTCMinutes();
+		var h = date.getHours();
+		var m = date.getMinutes();
 		return (h < 10 ? '0' + h : h) + ':' + (m < 10 ? '0' + m : m);
 	}
 };
@@ -68,12 +69,12 @@ SkedTape.prototype = {
 	 */
 	setDate: function(date, minHours, maxHours) {
         var midnight = new Date(date);
-        midnight.setUTCHours(0, 0, 0, 0);
+        midnight.setHours(0, 0, 0, 0);
 		var start = new Date(midnight);
-		start.setUTCHours(minHours || 0);
+		start.setHours(minHours || 0);
 		if (maxHours && maxHours != 24) {
 			var end = new Date(midnight.getTime());
-			end.setUTCHours(maxHours);
+			end.setHours(maxHours);
 		} else {
 			var end = new Date(midnight.getTime() + MS_PER_DAY);
 		}
@@ -125,6 +126,7 @@ SkedTape.prototype = {
 				id: location.id,
 				name: location.name,
 				order: location.order || 0,
+				tzOffset: location.tzOffset,
 				userData: location.userData ? $.extend({}, location.userData) : {}
 			};
 		});
@@ -374,8 +376,7 @@ SkedTape.prototype = {
 		oldScroll && this.$frame.scrollLeft(oldScroll);
 		var $timelineWrap = $('<div class="sked-tape__timeline-wrap"/>')
 			.append(this.renderTimeRows())
-			.append(this.renderGrid())
-			.append(this.renderTimeIndicator());
+			.append(this.renderGrid());
 		var minWidth = this.$canvas[0].scrollWidth;
 		this.$canvas
 			.css('min-width', Math.round(minWidth * this.zoom) + 'px')
@@ -429,7 +430,7 @@ SkedTape.prototype = {
 
 		var tick = new Date(this.start);
 		while (tick.getTime() <= this.end.getTime()) {
-			var hour = tick.getUTCHours();
+			var hour = tick.getHours();
 
 			var $time = $('<time/>')
 				.attr('datetime', tick.toISOString())
@@ -462,10 +463,17 @@ SkedTape.prototype = {
 		var events = this.events.sort($.proxy(function(a, b) {
 			return a.start.getTime() - b.start.getTime();
 		}, this));
+		this.timeIndicators = {};
 		$.each(this.getLocations(), $.proxy(function(i, location) {
 			var $li = $('<li class="sked-tape__event-row"/>')
 				.data('locationId', location.id)
 				.appendTo(this.$timeline);
+			// Render time indicator
+			var $timeIndicator = $('<div class="sked-tape__indicator"/>').hide();
+			if (this.timeIndicatorSerifs)
+				$timeIndicator.addClass('sked-tape__indicator--serifs');
+			this.timeIndicators[location.id] = $timeIndicator;
+			$li.append($timeIndicator);
 			// Render events
 			var intersections = this.getIntersections(location.id);
 			var lastEndTime = 0, lastEnd;
@@ -633,19 +641,23 @@ SkedTape.prototype = {
 		var hoursBeforeEvent =  getDurationHours(this.start, event.start);
 		return hoursBeforeEvent /  getDurationHours(this.start, this.end) * 100 + '%';
 	},
-	renderTimeIndicator: function() {
-		return this.$timeIndicator = $('<div class="sked-tape__indicator"/>').hide();
-	},
-	updateTimeIndicatorPos: function() {
-		var now = new Date().getTime() + this.tzOffset * MS_PER_MINUTE;
+	updateTimeIndicatorsPos: function() {
 		var start = this.start.getTime();
 		var end = this.end.getTime();
-		if (now >= start && now <= end) {
-			var offset = 100 * (now - start) / (end - start) + '%';
-			this.$timeIndicator.show().css('left', offset);
-		} else {
-			this.$timeIndicator.hide();
-		}
+		var utcNow = new Date().getTime();
+		Object.keys(this.timeIndicators).forEach(function(locationId) {
+			var location = this.getLocation(locationId);
+			var tzOffset = location.tzOffset === undefined ? this.tzOffset : location.tzOffset;
+			var tzDiff = tzOffset - CURRENT_TZ_OFFSET;
+			var now = utcNow - tzDiff * MS_PER_MINUTE;
+			var $timeIndicator = this.timeIndicators[locationId];
+			if (now >= start && now <= end) {
+				var offset = 100 * (now - start) / (end - start) + '%';
+				$timeIndicator.show().css('left', offset);
+			} else {
+				$timeIndicator.hide();
+			}
+		}, this);
 	},
 	/**
 	 * Returns event intersection list for a specified location.
@@ -707,10 +719,10 @@ SkedTape.prototype = {
 
 		this.renderAside();
 		this.renderTimeWrap(oldScrollLeft);
-		this.updateTimeIndicatorPos();
+		this.updateTimeIndicatorsPos();
 
 		this.indicatorTimeout = setInterval($.proxy(function() {
-			this.updateTimeIndicatorPos();
+			this.updateTimeIndicatorsPos();
 		}, this), 1000);
 
 		setTimeout($.proxy(function() {
@@ -1017,8 +1029,8 @@ function getDurationHours(start, end) {
 	return (end.getTime() - start.getTime()) / 1000 / 60 / 60;
 }
 function getMsFromMidnight(d) {
-	var secs = d.getUTCHours()*60*60 + d.getUTCMinutes()*60 + d.getUTCSeconds();
-	return secs * 1000 + d.getUTCMilliseconds();
+	var secs = d.getHours()*60*60 + d.getMinutes()*60 + d.getSeconds();
+	return secs * 1000 + d.getMilliseconds();
 }
 function getMsToMidnight(d) {
 	return MS_PER_DAY - getMsFromMidnight(d);
@@ -1040,7 +1052,7 @@ function gapBetween(a, b) {
 }
 function floorHours(date) {
     var floor = new Date(date);
-    floor.setUTCHours(date.getUTCHours(), 0, 0, 0);
+    floor.setHours(date.getHours(), 0, 0, 0);
     return floor;
 }
 function ceilHours(date) {
@@ -1185,6 +1197,15 @@ $.fn.skedTape.defaults = {
 	 * Right Mouse Button cancels adding a new event.
 	 */
 	rmbCancelsAdding: true,
+	/**
+	 * Default timezone for locations, takes effect when you don't specify it
+	 * in location descriptor. The default value is a browser's current timezone.
+	 */
+	tzOffset: CURRENT_TZ_OFFSET,
+	/**
+	 * Enables or disables showing serifs on time indicator lines.
+	 */
+	timeIndicatorSerifs: false,
 	/**
 	 * The callback executed to determine whether an event can be added to
 	 * some location while in visual adding mode.

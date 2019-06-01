@@ -25,7 +25,9 @@
         factory(jQuery);
     }
 }(function ($) {
-	var SkedTape = function(opts) {
+	var CURRENT_TZ_OFFSET = new Date().getTimezoneOffset();
+
+var SkedTape = function(opts) {
 	$.extend(this, opts);
 
 	this.$el = opts && opts.el ? $(opts.el) : $('<div/>');
@@ -35,7 +37,6 @@
 	this.events = [];
 	this.lastEventId = 0;
 	this.format = $.extend({}, SkedTape.defaultFormatters, (opts && opts.formatters) || {});
-	this.tzOffset = !opts || opts.tzOffset == undefined ? -(new Date).getTimezoneOffset() : opts.tzOffset;
 
 	this.$el.on('click', '.sked-tape__event', $.proxy(this.handleEventClick, this));
 	this.$el.on('contextmenu', '.sked-tape__event', $.proxy(this.handleEventContextMenu, this));
@@ -152,6 +153,7 @@ SkedTape.prototype = {
 				id: location.id,
 				name: location.name,
 				order: location.order || 0,
+				tzOffset: location.tzOffset,
 				userData: location.userData ? $.extend({}, location.userData) : {}
 			};
 		});
@@ -401,8 +403,7 @@ SkedTape.prototype = {
 		oldScroll && this.$frame.scrollLeft(oldScroll);
 		var $timelineWrap = $('<div class="sked-tape__timeline-wrap"/>')
 			.append(this.renderTimeRows())
-			.append(this.renderGrid())
-			.append(this.renderTimeIndicator());
+			.append(this.renderGrid());
 		var minWidth = this.$canvas[0].scrollWidth;
 		this.$canvas
 			.css('min-width', Math.round(minWidth * this.zoom) + 'px')
@@ -489,10 +490,17 @@ SkedTape.prototype = {
 		var events = this.events.sort($.proxy(function(a, b) {
 			return a.start.getTime() - b.start.getTime();
 		}, this));
+		this.timeIndicators = {};
 		$.each(this.getLocations(), $.proxy(function(i, location) {
 			var $li = $('<li class="sked-tape__event-row"/>')
 				.data('locationId', location.id)
 				.appendTo(this.$timeline);
+			// Render time indicator
+			var $timeIndicator = $('<div class="sked-tape__indicator"/>').hide();
+			if (this.timeIndicatorSerifs)
+				$timeIndicator.addClass('sked-tape__indicator--serifs');
+			this.timeIndicators[location.id] = $timeIndicator;
+			$li.append($timeIndicator);
 			// Render events
 			var intersections = this.getIntersections(location.id);
 			var lastEndTime = 0, lastEnd;
@@ -660,19 +668,23 @@ SkedTape.prototype = {
 		var hoursBeforeEvent =  getDurationHours(this.start, event.start);
 		return hoursBeforeEvent /  getDurationHours(this.start, this.end) * 100 + '%';
 	},
-	renderTimeIndicator: function() {
-		return this.$timeIndicator = $('<div class="sked-tape__indicator"/>').hide();
-	},
-	updateTimeIndicatorPos: function() {
-		var now = new Date().getTime() + this.tzOffset * MS_PER_MINUTE;
+	updateTimeIndicatorsPos: function() {
 		var start = this.start.getTime();
 		var end = this.end.getTime();
-		if (now >= start && now <= end) {
-			var offset = 100 * (now - start) / (end - start) + '%';
-			this.$timeIndicator.show().css('left', offset);
-		} else {
-			this.$timeIndicator.hide();
-		}
+		var utcNow = new Date().getTime();
+		Object.keys(this.timeIndicators).forEach(function(locationId) {
+			var location = this.getLocation(locationId);
+			var tzOffset = location.tzOffset === undefined ? this.tzOffset : location.tzOffset;
+			var tzDiff = tzOffset - CURRENT_TZ_OFFSET;
+			var now = utcNow - tzDiff * MS_PER_MINUTE;
+			var $timeIndicator = this.timeIndicators[locationId];
+			if (now >= start && now <= end) {
+				var offset = 100 * (now - start) / (end - start) + '%';
+				$timeIndicator.show().css('left', offset);
+			} else {
+				$timeIndicator.hide();
+			}
+		}, this);
 	},
 	/**
 	 * Returns event intersection list for a specified location.
@@ -734,10 +746,10 @@ SkedTape.prototype = {
 
 		this.renderAside();
 		this.renderTimeWrap(oldScrollLeft);
-		this.updateTimeIndicatorPos();
+		this.updateTimeIndicatorsPos();
 
 		this.indicatorTimeout = setInterval($.proxy(function() {
-			this.updateTimeIndicatorPos();
+			this.updateTimeIndicatorsPos();
 		}, this), 1000);
 
 		setTimeout($.proxy(function() {
@@ -1213,6 +1225,15 @@ $.fn.skedTape.defaults = {
 	 */
 	rmbCancelsAdding: true,
 	/**
+	 * Default timezone for locations, takes effect when you don't specify it
+	 * in location descriptor. The default value is a browser's current timezone.
+	 */
+	tzOffset: CURRENT_TZ_OFFSET,
+	/**
+	 * Enables or disables showing serifs on time indicator lines.
+	 */
+	timeIndicatorSerifs: false,
+	/**
 	 * The callback executed to determine whether an event can be added to
 	 * some location while in visual adding mode.
 	 * 
@@ -1247,4 +1268,4 @@ $.skedTape = function(opts) {
 	return $('<div/>').skedTape($.extend({}, opts || {}, {deferRender: true}));
 };
 
-}));
+}));

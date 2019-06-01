@@ -329,6 +329,28 @@
   border-left: 1px solid #e43828;
 }
 
+.sked-tape__indicator--serifs::before, .sked-tape__indicator--serifs::after {
+  content: '';
+  display: block;
+  position: absolute;
+  left: -4px;
+  width: 0;
+  height: 0;
+  border: 3px solid transparent;
+}
+
+.sked-tape__indicator--serifs::before {
+  top: 0;
+  border-bottom-width: 3px;
+  border-top: 3px solid #e43828;
+}
+
+.sked-tape__indicator--serifs::after {
+  bottom: 0;
+  border-top-width: 3px;
+  border-bottom: 3px solid #e43828;
+}
+
 .sked-tape__dates {
   display: flex;
   align-items: stretch;

@@ -20,7 +20,13 @@
                         <li>Use vertical mouse wheel to scroll timeline horizontally.</li>
                     </ul>
                 </div>
-                <div id="sked1"></div>
+                <div class="mb-2" id="sked1"></div>
+                <small>
+                    <span class="text-danger">*</span>
+                    To make the example lightweight the timezones in here
+                    are set disregarding the DST, so they may be different
+                    from the actual ones, that's ok.
+                </small>
             </div>
             <div class="mb-4">
                 <h2 class="mb-3">2. Deferred rendering demo</h2>
@@ -41,12 +47,12 @@
         <script type="text/javascript">
             // --------------------------- Data --------------------------------
             var locations = [
-                {id: '1', name: 'San Francisco'},
-                {id: '2', name: 'Sydney'},
-                {id: '3', name: 'New York'},
-                {id: 'london', name: 'London'},
-                {id: '5', name: 'Copenhagen'},
-                {id: '6', name: 'Berlin'}
+                {id: '1', name: 'San Francisco', tzOffset: 7 * 60},
+                {id: '2', name: 'Sydney', tzOffset: -10 * 60},
+                {id: '3', name: 'New York', tzOffset: 4 * 60},
+                {id: 'london', name: 'London', tzOffset: -1 * 60},
+                {id: '5', name: 'Copenhagen', tzOffset: -2 * 60},
+                {id: '6', name: 'Berlin', tzOffset: -2 * 60},
             ];
             var events = [
                 {
@@ -174,6 +180,7 @@
                 minGapTimeBetween: 1 * 60 * 1000,
                 snapToMins: 1,
                 editMode: true,
+                timeIndicatorSerifs: true,
                 formatters: {
                     date: function (date) {
                         return $.fn.skedTape.format.date(date, 'l', '.');
@@ -218,11 +225,15 @@
                 end: tomorrow(0, 0),
                 showEventTime: true,
                 showEventDuration: true,
-                locations: locations.slice(),
+                locations: locations.map(function(location) {
+                    var newLocation = $.extend({}, location);
+                    delete newLocation.tzOffset;
+                    return newLocation;
+                }),
                 events: events.slice(),
                 tzOffset: 0,
                 sorting: true,
-                orderBy: 'name'
+                orderBy: 'name',
             };
 			var $sked2 = $.skedTape(sked2Config);
 			$sked2.appendTo('#sked2').skedTape('render');

@@ -25,6 +25,7 @@ var $sked = $('#sked').skedTape({
             id: 'london',
             name: 'Sydney',
             order: 1, // optional sorting order
+            tzOffset: -10 * 60, // individual timezone (notice that minus sign)
             userData: {...} // optional some custom data to store
         },
         ...
@@ -57,7 +58,13 @@ var $sked = $('#sked').skedTape({
 - `minGapHiTime` (_int|false_) Minimum gap to DO NOT highlight adjacent entries in milliseconds. Default is false.
 - `formatters` (_object_) Custom date/time formatters. See the notes below.
 - `scrollWithYWheel` (_bool_) Enables horizontal timeline scrolling with vertical mouse wheel. Default is false.
-- `tzOffset` (_int_) Current timezone offset that affects time indicator line position.
+- `tzOffset` (_int_) The default timezone offset for locations, taking effect when
+  you do not specify it in location descriptor. The default value is a browser's
+  current timezone offset. Take in mind, that the offset value is negative for
+  positive timezones (GMT+N) and positive otherwise (i.e. for Sydney GMT+10 the
+  offset would be -600).
+- `timeIndicatorSerifs` (_bool_) Enables showing upper and lower serifs on time
+  indicator line. Default is false.
 
 **Available event object options**:
 - `name` (_string_)

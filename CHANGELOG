@@ -1,0 +1,7 @@
+## [2.0.0] 2019-06-02
+### Changed
+- Doesn't work with dates in UTC timezone anymore.
+  Now you should pass all your dates to the plugin in local timezone, and
+  they'll be shown in it (or any you specify) as well.
+### Added
+- Every location now may has individual timezone offset.
