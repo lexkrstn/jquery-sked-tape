@@ -73,8 +73,8 @@ SkedTape.defaultFormatters = {
 		return (hours < 10 ? '0' : '') + hours + ':00';
 	},
 	time: function (date) {
-		var h = date.getUTCHours();
-		var m = date.getUTCMinutes();
+		var h = date.getHours();
+		var m = date.getMinutes();
 		return (h < 10 ? '0' + h : h) + ':' + (m < 10 ? '0' + m : m);
 	}
 };
@@ -95,12 +95,12 @@ SkedTape.prototype = {
 	 */
 	setDate: function(date, minHours, maxHours) {
         var midnight = new Date(date);
-        midnight.setUTCHours(0, 0, 0, 0);
+        midnight.setHours(0, 0, 0, 0);
 		var start = new Date(midnight);
-		start.setUTCHours(minHours || 0);
+		start.setHours(minHours || 0);
 		if (maxHours && maxHours != 24) {
 			var end = new Date(midnight.getTime());
-			end.setUTCHours(maxHours);
+			end.setHours(maxHours);
 		} else {
 			var end = new Date(midnight.getTime() + MS_PER_DAY);
 		}
@@ -456,7 +456,7 @@ SkedTape.prototype = {
 
 		var tick = new Date(this.start);
 		while (tick.getTime() <= this.end.getTime()) {
-			var hour = tick.getUTCHours();
+			var hour = tick.getHours();
 
 			var $time = $('<time/>')
 				.attr('datetime', tick.toISOString())
@@ -1044,8 +1044,8 @@ function getDurationHours(start, end) {
 	return (end.getTime() - start.getTime()) / 1000 / 60 / 60;
 }
 function getMsFromMidnight(d) {
-	var secs = d.getUTCHours()*60*60 + d.getUTCMinutes()*60 + d.getUTCSeconds();
-	return secs * 1000 + d.getUTCMilliseconds();
+	var secs = d.getHours()*60*60 + d.getMinutes()*60 + d.getSeconds();
+	return secs * 1000 + d.getMilliseconds();
 }
 function getMsToMidnight(d) {
 	return MS_PER_DAY - getMsFromMidnight(d);
@@ -1067,7 +1067,7 @@ function gapBetween(a, b) {
 }
 function floorHours(date) {
     var floor = new Date(date);
-    floor.setUTCHours(date.getUTCHours(), 0, 0, 0);
+    floor.setHours(date.getHours(), 0, 0, 0);
     return floor;
 }
 function ceilHours(date) {
@@ -1247,4 +1247,4 @@ $.skedTape = function(opts) {
 	return $('<div/>').skedTape($.extend({}, opts || {}, {deferRender: true}));
 };
 
-}));
+}));
