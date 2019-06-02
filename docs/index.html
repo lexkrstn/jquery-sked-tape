@@ -10,6 +10,7 @@
     </head>
     <body>
         <div class="container">
+            <!-- EXAMPLE 1 -->
             <div class="mb-4">
                 <h2 class="mb-3">1. All-in-one example</h2>
                 <div class="alert alert-primary mb-3">
@@ -28,6 +29,7 @@
                     from the actual ones, that's ok.
                 </small>
             </div>
+            <!-- EXAMPLE 2 -->
             <div class="mb-4">
                 <h2 class="mb-3">2. Deferred rendering demo</h2>
                 <div class="alert alert-primary mb-3">
@@ -36,6 +38,48 @@
                     that tzOffset = 0 in this example.
                 </div>
                 <div id="sked2"></div>
+            </div>
+            <!-- EXAMPLE 3 -->
+            <div class="mb-4">
+                <h2 class="mb-3">3. Showing in tabs and modals</h2>
+                <div class="my-4">
+                    <button class="btn btn-primary" data-toggle="modal" data-target="#modal1">
+                        Show in modal
+                    </button>
+                </div>
+                <ul class="nav nav-tabs" id="nav1">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-toggle="tab" href="#empty-tab">Text</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-toggle="tab" href="#sked-tab">Schedule</a>
+                    </li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="empty-tab">
+                        It's an initial tab, there is nothing here.<br>
+                        Switch to the other tab.
+                    </div>
+                    <div class="tab-pane fade" id="sked-tab">
+                        <div id="sked4"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- EXAMPLE 3 - MODAL -->
+        <div class="modal" tabindex="-1" role="dialog" id="modal1">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Some modal</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="sked3"></div>
+                    </div>
+                </div>
             </div>
         </div>
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
@@ -238,7 +282,24 @@
 			var $sked2 = $.skedTape(sked2Config);
 			$sked2.appendTo('#sked2').skedTape('render');
 			//$sked2.skedTape('destroy');
-			$sked2.skedTape(sked2Config);
+            $sked2.skedTape(sked2Config);
+            // --------------------------- Example 3 ---------------------------
+            $('#modal1').on('shown.bs.modal', function() {
+                $('#sked3').skedTape(sked2Config);
+            });
+            $('#modal1').on('hidden.bs.modal', function() {
+                // This is not necessary, but it always a good idea to do not
+                // take processing time for elements that don't show.
+                $('#sked3').skedTape('destroy');
+            });
+
+            var $skedTabBtn = $('a[data-toggle="tab"][href="#sked-tab"]');
+            $skedTabBtn.on('shown.bs.tab', function(e) {
+                $('#sked4').skedTape(sked2Config);
+            });
+            $skedTabBtn.on('hidden.bs.tab', function(e) {
+                $('#sked4').skedTape('destroy');
+            });
         </script>
     </body>
 </html>
