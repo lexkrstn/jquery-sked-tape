@@ -5,10 +5,6 @@ Schedule component for jQuery that represents events in tape manner.
 
 ### API
 
-#### Preface
-
-Take in mind that SkedTape takes dates in UTC timezone and shows them the same way.
-
 #### Initialization
 
 Usually it looks like:
