@@ -137,7 +137,7 @@ SkedTape.prototype = {
 		return this.updateUnlessOption(opts);
     },
     addLocation: function(location, opts) {
-        this.locations.append(location);
+        this.locations.push(location);
         return this.updateUnlessOption(opts);
     },
     removeLocation: function(id, opts) {
