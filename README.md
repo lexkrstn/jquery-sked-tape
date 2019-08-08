@@ -114,6 +114,30 @@ And also you may change default settings globally, replacing the formatters
 within the `$.fn.skedTape.format` object. **ATTENTION** Do not replace the
 object itself - it won't work.
 
+
+#### Hooks
+
+- `canAddIntoLocation(location, event)` Invoked to determine whether an event
+  may be added to a location. The default implementation always returns *true*.
+  You should avoid mutating the arguments in this hook (that may cause
+  unexpected behaviour).
+- `beforeAddIntoLocation(location, event)` Invoked after getting a positive
+  result from the `canAddIntoLocation()` hook just before updating the event.
+  Here you can place any logic that mutates the event object given.
+- `postRenderLocation($el, location, canAdd)` The mixin is applied to every
+  location's DOM element when rendering the sidebar. he callback takes 3
+  arguments: 
+  - *$el* - jQuery text element node representing the location
+  - *location* - the corresponding location object
+  - *canAdd* - the result of executing the `canAddIntoLocation()` function.
+	The value is undefined if the function is called while no event is being
+    dragged.
+- `postRenderEvent($el, event)` The mixin applied to every event DOM element
+  on the timeline after rendering is complete and before actual inserting to the
+  DOM tree of the document. The default implementation does nothing, you may feel
+  free to replace it with your own code that modifies the default representation
+  of events on a timeline.
+
 ### Development deploy
 1. `npm i -g gulp-cli`
 2. `npm i`

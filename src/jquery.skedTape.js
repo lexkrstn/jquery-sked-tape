@@ -628,6 +628,8 @@ SkedTape.prototype = {
 			.appendTo(document.body);
 		$event.data('min-width', $loose.outerWidth());
 		$loose.remove();
+		// Execute the hook
+		this.postRenderEvent($event, event);
 
 		return $event;
 	},
@@ -1207,24 +1209,24 @@ $.fn.skedTape.defaults = {
 	 */
 	timeIndicatorSerifs: false,
 	/**
-	 * The callback executed to determine whether an event can be added to
-	 * some location while in visual adding mode.
+	 * The hook invoked to determine whether an event may be added to a location.
+	 * The default implementation always returns *true*.
+	 * You should avoid mutating the arguments in this hook (that may cause
+	 * unexpected behaviour).
 	 * 
 	 * @see beforeAddIntoLocation()
 	 */
 	canAddIntoLocation: function(location, event) { return true; },
 	/**
-	 * The callback executed after a positive result of canAddIntoLocation()
-	 * call and before updating the event. Here you can place any logic that
-	 * mutates the event object given instead of placing it in the checking
-	 * callback directly (which is not the designed behavior and may lead to
-	 * unexpected results).
+	 * Invoked after getting a positive result from the `canAddIntoLocation()`
+	 * hook just before updating the event. Here you can place any logic that
+	 * mutates the event object given.
 	 * 
 	 * @see canAddIntoLocation()
 	 */
 	beforeAddIntoLocation: function(location, event) {},
 	/**
-	 * The mixin applied to every location DOM element when rendering the sidebar.
+	 * The mixin is applied to every location's DOM element when rendering the sidebar.
 	 * The callback takes 3 arguments: jQuery text element node representing
 	 * the location, the corresponding location object and a boolean value
 	 * specifying the result of executing the `canAddIntoLocation()` function on
@@ -1234,7 +1236,15 @@ $.fn.skedTape.defaults = {
 	 */
 	postRenderLocation: function($el, location, canAdd) {
 		SkedTape.prototype.postRenderLocation.call(this, $el, location, canAdd);
-	}
+	},
+	/**
+	 * The mixin applied to every event DOM element on the timeline after
+	 * rendering is complete and before actual inserting to the DOM tree of the
+	 * document. The default implementation does nothing, you may feel free to
+	 * replace it with your own code that modifies the default representation of
+	 * events on a timeline.
+	 */
+	postRenderEvent: function($event, event) {},
 };
 
 $.skedTape = function(opts) {

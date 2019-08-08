@@ -655,6 +655,8 @@ SkedTape.prototype = {
 			.appendTo(document.body);
 		$event.data('min-width', $loose.outerWidth());
 		$loose.remove();
+		// Execute the hook
+		this.postRenderEvent($event, event);
 
 		return $event;
 	},
@@ -1261,7 +1263,15 @@ $.fn.skedTape.defaults = {
 	 */
 	postRenderLocation: function($el, location, canAdd) {
 		SkedTape.prototype.postRenderLocation.call(this, $el, location, canAdd);
-	}
+	},
+	/**
+	 * The mixin applied to every event DOM element on the timeline after
+	 * rendering is complete and before actual inserting to the DOM tree of the
+	 * document. The default implementation does nothing, you may feel free to
+	 * replace it with your own code that modifies the default representation of
+	 * events on a timeline.
+	 */
+	postRenderEvent: function($event, event) {},
 };
 
 $.skedTape = function(opts) {
