@@ -262,7 +262,7 @@
   color: white;
 }
 
-.sked-tape__dummy-event::before, .sked-tape__dummy-event::after {
+.sked-tape__dummy-event-time {
   position: absolute;
   display: block;
   top: 50%;
@@ -273,16 +273,15 @@
   background: rgba(227, 44, 27, 0.69);
   padding: 3px 2px;
   line-height: 1;
+  text-align: center;
 }
 
-.sked-tape__dummy-event::before {
-  content: attr(data-start);
+.sked-tape__dummy-event-time--left {
   right: 100%;
   margin-right: 5px;
 }
 
-.sked-tape__dummy-event::after {
-  content: attr(data-end);
+.sked-tape__dummy-event-time--right {
   left: 100%;
   margin-left: 5px;
 }

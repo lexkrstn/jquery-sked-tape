@@ -571,6 +571,32 @@ SkedTape.prototype = {
 			})
 			.append($text);
 	},
+	findEventJustBefore(event) {
+		var found = null;
+		$.each(this.events, function(index, iEvent) {
+			if (
+				iEvent.location == event.location &&
+				iEvent.end < event.start &&
+				(!found || found.end < iEvent.end)
+			) {
+				found = iEvent;
+			}
+		});
+		return found;
+	},
+	findEventJustAfter(event) {
+		var found = null;
+		$.each(this.events, function(index, iEvent) {
+			if (
+				iEvent.location == event.location &&
+				iEvent.start > event.end &&
+				(!found || found.start > iEvent.start)
+			) {
+				found = iEvent;
+			}
+		});
+		return found;
+	},
 	updateDummyEvent: function() {
 		if (!this.isAdding()) {
 			// Remove its node from the timline
@@ -583,19 +609,49 @@ SkedTape.prototype = {
 		// Create the event if it doesn't exist
 		var event = this.dummyEvent;
 		if (!this.$dummyEvent) {
-			this.$dummyEvent = $('<div/>');
+			var timeClass = 'sked-tape__dummy-event-time';
+			var timeClassLeft = timeClass + ' ' + timeClass + '--left';
+			var timeClassRight = timeClass + ' ' + timeClass + '--right';
+			this.$dummyEvent = $('<div/>')
+				.append('<div class="' + timeClassLeft + '"/>')
+				.append('<div class="' + timeClassRight + '"/>');
 		}
+		var $dummyChildren = this.$dummyEvent.children();
+		var $dummyLeft = $dummyChildren.filter(':first');
+		var $dummyRight = $dummyChildren.filter(':last');
 		// Apply the className, attributes and styles
 		this.$dummyEvent[0].className = 'sked-tape__dummy-event ' + (event.className || '');
-		this.$dummyEvent
-			.css({
-				width: this.computeEventWidth(event),
-				left: this.computeEventOffset(event)
-			})
-			.attr({
-				'data-start': this.format.time(event.start),
-				'data-end': this.format.time(event.end)
-			});
+		this.$dummyEvent.css({
+			width: this.computeEventWidth(event),
+			left: this.computeEventOffset(event)
+		});
+		var leftText = this.format.time(event.start);
+		var rightText = this.format.time(event.end);
+		if (this.showIntermission) {
+			const prevEvent = this.findEventJustBefore(event);
+			var interval;
+			if (prevEvent) {
+				interval = Math.round((event.start - prevEvent.end) / MS_PER_MINUTE);
+				if (
+					interval >= this.intermissionRange[0] &&
+					interval <= this.intermissionRange[1]
+				) {
+					leftText += '<br>+' + this.format.duration(interval * MS_PER_MINUTE);
+				}
+			}
+			const nextEvent = this.findEventJustAfter(event);
+			if (nextEvent) {
+				interval = Math.round((nextEvent.start - event.end) / MS_PER_MINUTE);
+				if (
+					interval >= this.intermissionRange[0] &&
+					interval <= this.intermissionRange[1]
+				) {
+					rightText += '<br>+' + this.format.duration(interval * MS_PER_MINUTE);
+				}
+			}
+		}
+		$dummyLeft.html(leftText);
+		$dummyRight.html(rightText);
 		// Append to an appropriate location dom node
 		var $location = this.$dummyEvent.closest('.sked-tape__event-row');
 		if (!$location.length || $location.data('locationId') != event.location) {
@@ -1236,24 +1292,33 @@ $.fn.skedTape.defaults = {
 	 */
 	timeIndicatorSerifs: false,
 	/**
-	 * The callback executed to determine whether an event can be added to
-	 * some location while in visual adding mode.
+	 * Enables or disables showing intervals between events.
+	 */
+	showIntermission: false,
+	/**
+	 * Interval (in minutes) between events to show intermission time when it is
+	 * enabled.
+	 */
+	intermissionRange: [1, 60],
+	/**
+	 * The hook invoked to determine whether an event may be added to a location.
+	 * The default implementation always returns *true*.
+	 * You should avoid mutating the arguments in this hook (that may cause
+	 * unexpected behaviour).
 	 * 
 	 * @see beforeAddIntoLocation()
 	 */
 	canAddIntoLocation: function(location, event) { return true; },
 	/**
-	 * The callback executed after a positive result of canAddIntoLocation()
-	 * call and before updating the event. Here you can place any logic that
-	 * mutates the event object given instead of placing it in the checking
-	 * callback directly (which is not the designed behavior and may lead to
-	 * unexpected results).
+	 * Invoked after getting a positive result from the `canAddIntoLocation()`
+	 * hook just before updating the event. Here you can place any logic that
+	 * mutates the event object given.
 	 * 
 	 * @see canAddIntoLocation()
 	 */
 	beforeAddIntoLocation: function(location, event) {},
 	/**
-	 * The mixin applied to every location DOM element when rendering the sidebar.
+	 * The mixin is applied to every location's DOM element when rendering the sidebar.
 	 * The callback takes 3 arguments: jQuery text element node representing
 	 * the location, the corresponding location object and a boolean value
 	 * specifying the result of executing the `canAddIntoLocation()` function on

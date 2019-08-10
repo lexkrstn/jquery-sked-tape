@@ -61,6 +61,10 @@ var $sked = $('#sked').skedTape({
   offset would be -600).
 - `timeIndicatorSerifs` (_bool_) Enables showing upper and lower serifs on time
   indicator line. Default is false.
+- `showIntermission` (_bool_) Enables or disables showing intervals between
+  events. Disabled by default.
+- `intermissionRange` (_[int, int]_) Interval (in minutes) between events to
+  show intermission time when it is enabled. The default value is _[1, 60]_.
 
 **Available event object options**:
 - `name` (_string_)
