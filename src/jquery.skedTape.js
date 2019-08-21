@@ -544,7 +544,7 @@ SkedTape.prototype = {
 			})
 			.append($text);
 	},
-	findEventJustBefore(event) {
+	findEventJustBefore: function(event) {
 		var found = null;
 		$.each(this.events, function(index, iEvent) {
 			if (
@@ -557,7 +557,7 @@ SkedTape.prototype = {
 		});
 		return found;
 	},
-	findEventJustAfter(event) {
+	findEventJustAfter: function(event) {
 		var found = null;
 		$.each(this.events, function(index, iEvent) {
 			if (
