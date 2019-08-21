@@ -50,12 +50,28 @@ var SkedTape = function(opts) {
 };
 
 SkedTape.defaultFormatters = {
-	date: function (date, endian, delim) {
+	/**
+	 * Formats the date.
+	 * 
+	 * Note, since the component itself invokes the function with a single
+	 * argument, when overriding the function you should provide only the first
+	 * one. The sole purpose of the rest of them is to be used from the derived
+	 * function for convenience. 
+	 * 
+	 * @param {Date} date The date to format.
+	 * @param {'m'|'l'} endian Date format endianess ('m' - US, 'l' - EU).
+	 *                         Default value is 'm'.
+	 * @param {String} delim Date component delimiter.
+	 *                       Default - '/' or '.' depending on `endian`'s value.
+	 */
+	date: function(date, endian, delim) {
 		endian = endian || 'm';
-		var nums = date.toISOString().substring(0, 10).split('-');
-		nums = endian === 'l' ? nums.reverse() : nums;
-		nums = endian === 'm' ? [parseInt(nums[1]), parseInt(nums[2]), nums[0]] : nums;
-		return nums.join(delim || (endian === 'm' ? '/' : '.'));
+		delim = delim || (endian === 'm' ? '/' : '.');
+		var nums = [date.getDate(), date.getMonth() + 1, date.getFullYear()];
+		if (endian === 'm') {
+			nums = [nums[1], nums[0], nums[2]];
+		}
+		return nums.join(delim);
 	},
 	roundDuration: function(ms) {
 		return ms;
@@ -1343,4 +1359,4 @@ $.skedTape = function(opts) {
 	return $('<div/>').skedTape($.extend({}, opts || {}, {deferRender: true}));
 };
 
-}));
+}));
