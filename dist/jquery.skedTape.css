@@ -262,7 +262,7 @@
   color: white;
 }
 
-.sked-tape__dummy-event::before, .sked-tape__dummy-event::after {
+.sked-tape__dummy-event-time {
   position: absolute;
   display: block;
   top: 50%;
@@ -273,16 +273,15 @@
   background: rgba(227, 44, 27, 0.69);
   padding: 3px 2px;
   line-height: 1;
+  text-align: center;
 }
 
-.sked-tape__dummy-event::before {
-  content: attr(data-start);
+.sked-tape__dummy-event-time--left {
   right: 100%;
   margin-right: 5px;
 }
 
-.sked-tape__dummy-event::after {
-  content: attr(data-end);
+.sked-tape__dummy-event-time--right {
   left: 100%;
   margin-left: 5px;
 }
@@ -327,6 +326,28 @@
   top: 0;
   bottom: 0;
   border-left: 1px solid #e43828;
+}
+
+.sked-tape__indicator--serifs::before, .sked-tape__indicator--serifs::after {
+  content: '';
+  display: block;
+  position: absolute;
+  left: -4px;
+  width: 0;
+  height: 0;
+  border: 3px solid transparent;
+}
+
+.sked-tape__indicator--serifs::before {
+  top: 0;
+  border-bottom-width: 3px;
+  border-top: 3px solid #e43828;
+}
+
+.sked-tape__indicator--serifs::after {
+  bottom: 0;
+  border-top-width: 3px;
+  border-bottom: 3px solid #e43828;
 }
 
 .sked-tape__dates {

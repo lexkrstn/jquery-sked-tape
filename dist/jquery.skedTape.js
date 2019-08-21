@@ -1,4 +1,32 @@
-;(function($){
+(function (factory) {
+    if (typeof define === 'function' && define.amd) {
+        // AMD. Register as an anonymous module.
+        define(['jquery'], factory);
+    } else if (typeof module === 'object' && module.exports) {
+        // Node/CommonJS
+        module.exports = function( root, jQuery ) {
+            if ( jQuery === undefined ) {
+                // require('jQuery') returns a factory that requires window to
+                // build a jQuery instance, we normalize how we use modules
+                // that require this pattern but the window provided is a noop
+                // if it's defined (how jquery works)
+                if ( typeof window !== 'undefined' ) {
+                    jQuery = require('jquery');
+                }
+                else {
+                    jQuery = require('jquery')(root);
+                }
+            }
+            factory(jQuery);
+            return jQuery;
+        };
+    } else {
+        // Browser globals
+        factory(jQuery);
+    }
+}(function ($) {
+	var CURRENT_TZ_OFFSET = new Date().getTimezoneOffset();
+
 var SkedTape = function(opts) {
 	$.extend(this, opts);
 
@@ -9,7 +37,6 @@ var SkedTape = function(opts) {
 	this.events = [];
 	this.lastEventId = 0;
 	this.format = $.extend({}, SkedTape.defaultFormatters, (opts && opts.formatters) || {});
-	this.tzOffset = !opts || opts.tzOffset == undefined ? -(new Date).getTimezoneOffset() : opts.tzOffset;
 
 	this.$el.on('click', '.sked-tape__event', $.proxy(this.handleEventClick, this));
 	this.$el.on('contextmenu', '.sked-tape__event', $.proxy(this.handleEventContextMenu, this));
@@ -47,8 +74,8 @@ SkedTape.defaultFormatters = {
 		return (hours < 10 ? '0' : '') + hours + ':00';
 	},
 	time: function (date) {
-		var h = date.getUTCHours();
-		var m = date.getUTCMinutes();
+		var h = date.getHours();
+		var m = date.getMinutes();
 		return (h < 10 ? '0' + h : h) + ':' + (m < 10 ? '0' + m : m);
 	}
 };
@@ -69,12 +96,12 @@ SkedTape.prototype = {
 	 */
 	setDate: function(date, minHours, maxHours) {
         var midnight = new Date(date);
-        midnight.setUTCHours(0, 0, 0, 0);
+        midnight.setHours(0, 0, 0, 0);
 		var start = new Date(midnight);
-		start.setUTCHours(minHours || 0);
+		start.setHours(minHours || 0);
 		if (maxHours && maxHours != 24) {
 			var end = new Date(midnight.getTime());
-			end.setUTCHours(maxHours);
+			end.setHours(maxHours);
 		} else {
 			var end = new Date(midnight.getTime() + MS_PER_DAY);
 		}
@@ -126,6 +153,7 @@ SkedTape.prototype = {
 				id: location.id,
 				name: location.name,
 				order: location.order || 0,
+				tzOffset: location.tzOffset,
 				userData: location.userData ? $.extend({}, location.userData) : {}
 			};
 		});
@@ -136,7 +164,7 @@ SkedTape.prototype = {
 		return this.updateUnlessOption(opts);
     },
     addLocation: function(location, opts) {
-        this.locations.append(location);
+        this.locations.push(location);
         return this.updateUnlessOption(opts);
     },
     removeLocation: function(id, opts) {
@@ -375,8 +403,7 @@ SkedTape.prototype = {
 		oldScroll && this.$frame.scrollLeft(oldScroll);
 		var $timelineWrap = $('<div class="sked-tape__timeline-wrap"/>')
 			.append(this.renderTimeRows())
-			.append(this.renderGrid())
-			.append(this.renderTimeIndicator());
+			.append(this.renderGrid());
 		var minWidth = this.$canvas[0].scrollWidth;
 		this.$canvas
 			.css('min-width', Math.round(minWidth * this.zoom) + 'px')
@@ -430,7 +457,7 @@ SkedTape.prototype = {
 
 		var tick = new Date(this.start);
 		while (tick.getTime() <= this.end.getTime()) {
-			var hour = tick.getUTCHours();
+			var hour = tick.getHours();
 
 			var $time = $('<time/>')
 				.attr('datetime', tick.toISOString())
@@ -463,10 +490,17 @@ SkedTape.prototype = {
 		var events = this.events.sort($.proxy(function(a, b) {
 			return a.start.getTime() - b.start.getTime();
 		}, this));
+		this.timeIndicators = {};
 		$.each(this.getLocations(), $.proxy(function(i, location) {
 			var $li = $('<li class="sked-tape__event-row"/>')
 				.data('locationId', location.id)
 				.appendTo(this.$timeline);
+			// Render time indicator
+			var $timeIndicator = $('<div class="sked-tape__indicator"/>').hide();
+			if (this.timeIndicatorSerifs)
+				$timeIndicator.addClass('sked-tape__indicator--serifs');
+			this.timeIndicators[location.id] = $timeIndicator;
+			$li.append($timeIndicator);
 			// Render events
 			var intersections = this.getIntersections(location.id);
 			var lastEndTime = 0, lastEnd;
@@ -537,6 +571,32 @@ SkedTape.prototype = {
 			})
 			.append($text);
 	},
+	findEventJustBefore(event) {
+		var found = null;
+		$.each(this.events, function(index, iEvent) {
+			if (
+				iEvent.location == event.location &&
+				iEvent.end < event.start &&
+				(!found || found.end < iEvent.end)
+			) {
+				found = iEvent;
+			}
+		});
+		return found;
+	},
+	findEventJustAfter(event) {
+		var found = null;
+		$.each(this.events, function(index, iEvent) {
+			if (
+				iEvent.location == event.location &&
+				iEvent.start > event.end &&
+				(!found || found.start > iEvent.start)
+			) {
+				found = iEvent;
+			}
+		});
+		return found;
+	},
 	updateDummyEvent: function() {
 		if (!this.isAdding()) {
 			// Remove its node from the timline
@@ -549,19 +609,49 @@ SkedTape.prototype = {
 		// Create the event if it doesn't exist
 		var event = this.dummyEvent;
 		if (!this.$dummyEvent) {
-			this.$dummyEvent = $('<div/>');
+			var timeClass = 'sked-tape__dummy-event-time';
+			var timeClassLeft = timeClass + ' ' + timeClass + '--left';
+			var timeClassRight = timeClass + ' ' + timeClass + '--right';
+			this.$dummyEvent = $('<div/>')
+				.append('<div class="' + timeClassLeft + '"/>')
+				.append('<div class="' + timeClassRight + '"/>');
 		}
+		var $dummyChildren = this.$dummyEvent.children();
+		var $dummyLeft = $dummyChildren.filter(':first');
+		var $dummyRight = $dummyChildren.filter(':last');
 		// Apply the className, attributes and styles
 		this.$dummyEvent[0].className = 'sked-tape__dummy-event ' + (event.className || '');
-		this.$dummyEvent
-			.css({
-				width: this.computeEventWidth(event),
-				left: this.computeEventOffset(event)
-			})
-			.attr({
-				'data-start': this.format.time(event.start),
-				'data-end': this.format.time(event.end)
-			});
+		this.$dummyEvent.css({
+			width: this.computeEventWidth(event),
+			left: this.computeEventOffset(event)
+		});
+		var leftText = this.format.time(event.start);
+		var rightText = this.format.time(event.end);
+		if (this.showIntermission) {
+			const prevEvent = this.findEventJustBefore(event);
+			var interval;
+			if (prevEvent) {
+				interval = Math.round((event.start - prevEvent.end) / MS_PER_MINUTE);
+				if (
+					interval >= this.intermissionRange[0] &&
+					interval <= this.intermissionRange[1]
+				) {
+					leftText += '<br>+' + this.format.duration(interval * MS_PER_MINUTE);
+				}
+			}
+			const nextEvent = this.findEventJustAfter(event);
+			if (nextEvent) {
+				interval = Math.round((nextEvent.start - event.end) / MS_PER_MINUTE);
+				if (
+					interval >= this.intermissionRange[0] &&
+					interval <= this.intermissionRange[1]
+				) {
+					rightText += '<br>+' + this.format.duration(interval * MS_PER_MINUTE);
+				}
+			}
+		}
+		$dummyLeft.html(leftText);
+		$dummyRight.html(rightText);
 		// Append to an appropriate location dom node
 		var $location = this.$dummyEvent.closest('.sked-tape__event-row');
 		if (!$location.length || $location.data('locationId') != event.location) {
@@ -621,6 +711,8 @@ SkedTape.prototype = {
 			.appendTo(document.body);
 		$event.data('min-width', $loose.outerWidth());
 		$loose.remove();
+		// Execute the hook
+		this.postRenderEvent($event, event);
 
 		return $event;
 	},
@@ -634,19 +726,23 @@ SkedTape.prototype = {
 		var hoursBeforeEvent =  getDurationHours(this.start, event.start);
 		return hoursBeforeEvent /  getDurationHours(this.start, this.end) * 100 + '%';
 	},
-	renderTimeIndicator: function() {
-		return this.$timeIndicator = $('<div class="sked-tape__indicator"/>').hide();
-	},
-	updateTimeIndicatorPos: function() {
-		var now = new Date().getTime() + this.tzOffset * MS_PER_MINUTE;
+	updateTimeIndicatorsPos: function() {
 		var start = this.start.getTime();
 		var end = this.end.getTime();
-		if (now >= start && now <= end) {
-			var offset = 100 * (now - start) / (end - start) + '%';
-			this.$timeIndicator.show().css('left', offset);
-		} else {
-			this.$timeIndicator.hide();
-		}
+		var utcNow = new Date().getTime();
+		Object.keys(this.timeIndicators).forEach(function(locationId) {
+			var location = this.getLocation(locationId);
+			var tzOffset = location.tzOffset === undefined ? this.tzOffset : location.tzOffset;
+			var tzDiff = tzOffset - CURRENT_TZ_OFFSET;
+			var now = utcNow - tzDiff * MS_PER_MINUTE;
+			var $timeIndicator = this.timeIndicators[locationId];
+			if (now >= start && now <= end) {
+				var offset = 100 * (now - start) / (end - start) + '%';
+				$timeIndicator.show().css('left', offset);
+			} else {
+				$timeIndicator.hide();
+			}
+		}, this);
 	},
 	/**
 	 * Returns event intersection list for a specified location.
@@ -682,6 +778,10 @@ SkedTape.prototype = {
 		}, this));
 		return intersections;
 	},
+	destroy: function() {
+		this.cleanup();
+		this.$el.off().empty().removeClass('sked-tape sked-tape--has-dates');
+	},
 	cleanup: function() {
 		if ($.fn.popover) {
 			this.$el.find('.sked-tape__event')
@@ -704,10 +804,10 @@ SkedTape.prototype = {
 
 		this.renderAside();
 		this.renderTimeWrap(oldScrollLeft);
-		this.updateTimeIndicatorPos();
+		this.updateTimeIndicatorsPos();
 
 		this.indicatorTimeout = setInterval($.proxy(function() {
-			this.updateTimeIndicatorPos();
+			this.updateTimeIndicatorsPos();
 		}, this), 1000);
 
 		setTimeout($.proxy(function() {
@@ -746,7 +846,7 @@ SkedTape.prototype = {
 	setSnapToMins: function(mins) {
 		this.snapToMins = mins;
 	},
-	findEventsAtTime(date, locationId) {
+	findEventsAtTime: function(date, locationId) {
 		var time = date.getTime();
 		var events = [];
 		$.each(this.getEvents(), function(i, event) {
@@ -995,7 +1095,7 @@ SkedTape.CollisionError.prototype = Object.create(Error.prototype);
 SkedTape.CollisionError.prototype.name = "SkedTape.CollisionError";
 SkedTape.CollisionError.prototype.constructor = SkedTape.CollisionError;
 
-var TWBS_MAJOR = parseInt($.fn.popover.Constructor.VERSION.charAt(0), 10);
+var TWBS_MAJOR = $.fn.popover ? parseInt($.fn.popover.Constructor.VERSION.charAt(0), 10) : 0;
 var SECS_PER_DAY = 24 * 60 * 60;
 var MS_PER_DAY = SECS_PER_DAY * 1000;
 var MS_PER_MINUTE = 60 * 1000;
@@ -1014,8 +1114,8 @@ function getDurationHours(start, end) {
 	return (end.getTime() - start.getTime()) / 1000 / 60 / 60;
 }
 function getMsFromMidnight(d) {
-	var secs = d.getUTCHours()*60*60 + d.getUTCMinutes()*60 + d.getUTCSeconds();
-	return secs * 1000 + d.getUTCMilliseconds();
+	var secs = d.getHours()*60*60 + d.getMinutes()*60 + d.getSeconds();
+	return secs * 1000 + d.getMilliseconds();
 }
 function getMsToMidnight(d) {
 	return MS_PER_DAY - getMsFromMidnight(d);
@@ -1037,7 +1137,7 @@ function gapBetween(a, b) {
 }
 function floorHours(date) {
     var floor = new Date(date);
-    floor.setUTCHours(date.getUTCHours(), 0, 0, 0);
+    floor.setHours(date.getHours(), 0, 0, 0);
     return floor;
 }
 function ceilHours(date) {
@@ -1056,9 +1156,12 @@ $.fn.skedTape = function(opts) {
     var args = cmd ? Array.prototype.slice.call(arguments, 1) : [];
     return this.each(function() {
         var obj = $(this).data($.fn.skedTape.dataKey);
-        if (!obj) {
+        if (!obj || !cmd) {
             if (cmd) {
                 throw new Error('SkedTape plugin hadn\'t been initialized but used');
+			}
+			if (obj) {
+				obj.destroy();
 			}
 			var objOpts = $.extend({}, $.fn.skedTape.defaults, opts, {
 				el: this
@@ -1074,11 +1177,11 @@ $.fn.skedTape = function(opts) {
 			opts.events && obj.setEvents(opts.events, {update: false, allowCollisions: true});
 			$(this).data($.fn.skedTape.dataKey, obj);
 			opts.deferRender || obj.render();
-        } else if (cmd) {
+        } else {
             switch (cmd) {
                 case 'destroy':
                     obj.destroy();
-                    $(this).removeData($.fn.skedTape.dataKey).remove();
+                    $(this).removeData($.fn.skedTape.dataKey);
 					break;
 				default:
 					var methods = [
@@ -1095,8 +1198,6 @@ $.fn.skedTape = function(opts) {
 						throw new Error('SkedTape plugin cannot recognize command');
 					}
             }
-        } else {
-            throw new Error('SkedType plugin has been initialized yet');
         }
     });
 };
@@ -1111,7 +1212,7 @@ function findIntersection(a, b) {
 	}
 
     return {
-		start: max.start ,
+		start: max.start,
 		end: min.end < max.end ? min.end : max.end
 	};
 }
@@ -1182,24 +1283,42 @@ $.fn.skedTape.defaults = {
 	 */
 	rmbCancelsAdding: true,
 	/**
-	 * The callback executed to determine whether an event can be added to
-	 * some location while in visual adding mode.
+	 * Default timezone for locations, takes effect when you don't specify it
+	 * in location descriptor. The default value is a browser's current timezone.
+	 */
+	tzOffset: CURRENT_TZ_OFFSET,
+	/**
+	 * Enables or disables showing serifs on time indicator lines.
+	 */
+	timeIndicatorSerifs: false,
+	/**
+	 * Enables or disables showing intervals between events.
+	 */
+	showIntermission: false,
+	/**
+	 * Interval (in minutes) between events to show intermission time when it is
+	 * enabled.
+	 */
+	intermissionRange: [1, 60],
+	/**
+	 * The hook invoked to determine whether an event may be added to a location.
+	 * The default implementation always returns *true*.
+	 * You should avoid mutating the arguments in this hook (that may cause
+	 * unexpected behaviour).
 	 * 
 	 * @see beforeAddIntoLocation()
 	 */
 	canAddIntoLocation: function(location, event) { return true; },
 	/**
-	 * The callback executed after a positive result of canAddIntoLocation()
-	 * call and before updating the event. Here you can place any logic that
-	 * mutates the event object given instead of placing it in the checking
-	 * callback directly (which is not the designed behavior and may lead to
-	 * unexpected results).
+	 * Invoked after getting a positive result from the `canAddIntoLocation()`
+	 * hook just before updating the event. Here you can place any logic that
+	 * mutates the event object given.
 	 * 
 	 * @see canAddIntoLocation()
 	 */
 	beforeAddIntoLocation: function(location, event) {},
 	/**
-	 * The mixin applied to every location DOM element when rendering the sidebar.
+	 * The mixin is applied to every location's DOM element when rendering the sidebar.
 	 * The callback takes 3 arguments: jQuery text element node representing
 	 * the location, the corresponding location object and a boolean value
 	 * specifying the result of executing the `canAddIntoLocation()` function on
@@ -1209,11 +1328,19 @@ $.fn.skedTape.defaults = {
 	 */
 	postRenderLocation: function($el, location, canAdd) {
 		SkedTape.prototype.postRenderLocation.call(this, $el, location, canAdd);
-	}
+	},
+	/**
+	 * The mixin applied to every event DOM element on the timeline after
+	 * rendering is complete and before actual inserting to the DOM tree of the
+	 * document. The default implementation does nothing, you may feel free to
+	 * replace it with your own code that modifies the default representation of
+	 * events on a timeline.
+	 */
+	postRenderEvent: function($event, event) {},
 };
 
 $.skedTape = function(opts) {
-	return $('<div/>').skedTape($.extend(opts || {}, {deferRender: true}));
+	return $('<div/>').skedTape($.extend({}, opts || {}, {deferRender: true}));
 };
 
-}(jQuery));
+}));

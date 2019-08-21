@@ -5,10 +5,6 @@ Schedule component for jQuery that represents events in tape manner.
 
 ### API
 
-#### Preface
-
-Take in mind that SkedTape takes dates in UTC timezone and shows them the same way.
-
 #### Initialization
 
 Usually it looks like:
@@ -25,6 +21,7 @@ var $sked = $('#sked').skedTape({
             id: 'london',
             name: 'Sydney',
             order: 1, // optional sorting order
+            tzOffset: -10 * 60, // individual timezone (notice that minus sign)
             userData: {...} // optional some custom data to store
         },
         ...
@@ -57,7 +54,17 @@ var $sked = $('#sked').skedTape({
 - `minGapHiTime` (_int|false_) Minimum gap to DO NOT highlight adjacent entries in milliseconds. Default is false.
 - `formatters` (_object_) Custom date/time formatters. See the notes below.
 - `scrollWithYWheel` (_bool_) Enables horizontal timeline scrolling with vertical mouse wheel. Default is false.
-- `tzOffseet` (_int_) Current timezone offset that affects time indicator line position.
+- `tzOffset` (_int_) The default timezone offset for locations, taking effect when
+  you do not specify it in location descriptor. The default value is a browser's
+  current timezone offset. Take in mind, that the offset value is negative for
+  positive timezones (GMT+N) and positive otherwise (i.e. for Sydney GMT+10 the
+  offset would be -600).
+- `timeIndicatorSerifs` (_bool_) Enables showing upper and lower serifs on time
+  indicator line. Default is false.
+- `showIntermission` (_bool_) Enables or disables showing intervals between
+  events. Disabled by default.
+- `intermissionRange` (_[int, int]_) Interval (in minutes) between events to
+  show intermission time when it is enabled. The default value is _[1, 60]_.
 
 **Available event object options**:
 - `name` (_string_)
@@ -110,6 +117,30 @@ fill up the `formatters` property during the constructing of every component.
 And also you may change default settings globally, replacing the formatters
 within the `$.fn.skedTape.format` object. **ATTENTION** Do not replace the
 object itself - it won't work.
+
+
+#### Hooks
+
+- `canAddIntoLocation(location, event)` Invoked to determine whether an event
+  may be added to a location. The default implementation always returns *true*.
+  You should avoid mutating the arguments in this hook (that may cause
+  unexpected behaviour).
+- `beforeAddIntoLocation(location, event)` Invoked after getting a positive
+  result from the `canAddIntoLocation()` hook just before updating the event.
+  Here you can place any logic that mutates the event object given.
+- `postRenderLocation($el, location, canAdd)` The mixin is applied to every
+  location's DOM element when rendering the sidebar. he callback takes 3
+  arguments: 
+  - *$el* - jQuery text element node representing the location
+  - *location* - the corresponding location object
+  - *canAdd* - the result of executing the `canAddIntoLocation()` function.
+	The value is undefined if the function is called while no event is being
+    dragged.
+- `postRenderEvent($el, event)` The mixin applied to every event DOM element
+  on the timeline after rendering is complete and before actual inserting to the
+  DOM tree of the document. The default implementation does nothing, you may feel
+  free to replace it with your own code that modifies the default representation
+  of events on a timeline.
 
 ### Development deploy
 1. `npm i -g gulp-cli`

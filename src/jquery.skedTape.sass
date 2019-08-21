@@ -235,24 +235,25 @@ $skedtape-background-color: white !default
 		white-space: nowrap
 		font-size: 12px
 		color: white
-		&::before, &::after
-			position: absolute
-			display: block
-			top: 50%
-			transform: translateY(-50%)
-			color: #fff
-			border: 1px solid darken($skedtape-entry-color, 15%)
-			background: rgba(227, 44, 27, 0.69)
-			padding: 3px 2px
-			line-height: 1
-		&::before
-			content: attr(data-start)
-			right: 100%
-			margin-right: 5px
-		&::after
-			content: attr(data-end)
-			left: 100%
-			margin-left: 5px
+	&__dummy-event-time
+		position: absolute
+		display: block
+		top: 50%
+		transform: translateY(-50%)
+		color: #fff
+		border: 1px solid darken($skedtape-entry-color, 15%)
+		background: rgba(227, 44, 27, 0.69)
+		padding: 3px 2px
+		line-height: 1
+		text-align: center
+	&__dummy-event-time--left
+		// content: attr(data-start)
+		right: 100%
+		margin-right: 5px
+	&__dummy-event-time--right
+		// content: attr(data-end)
+		left: 100%
+		margin-left: 5px
 	
 	&__center
 		position: relative
@@ -284,11 +285,30 @@ $skedtape-background-color: white !default
 			width: $skedtape-hour-column-width
 
 	&__indicator
+		$serif-width: 6px
+		$serif-height: 6px
 		position: absolute
 		z-index: 4
 		top: 0
 		bottom: 0
 		border-left: 1px solid #e43828
+		&--serifs
+			&::before, &::after
+				content: ''
+				display: block
+				position: absolute
+				left: (-$serif-width / 2 - 1px)
+				width: 0
+				height: 0
+				border: ($serif-width / 2) solid transparent
+			&::before
+				top: 0
+				border-bottom-width: ($serif-height / 2)
+				border-top: ($serif-height / 2) solid #e43828
+			&::after
+				bottom: 0
+				border-top-width: ($serif-height / 2)
+				border-bottom: ($serif-height / 2) solid #e43828
 
 	&__dates
 		display: flex
