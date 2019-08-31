@@ -669,15 +669,15 @@ SkedTape.prototype = {
 		$dummyLeft.html(leftText);
 		$dummyRight.html(rightText);
 		// Append to an appropriate location dom node
-		var $location = this.$dummyEvent.closest('.sked-tape__event-row');
-		if (!$location.length || $location.data('locationId') != event.location) {
-			this.$el.find('.sked-tape__event-row').each(function() {
-				if ($(this).data('locationId') == event.location) {
-					$location = $(this);
-					return false;
-				}
+		var $eventRow = this.$dummyEvent.closest('.sked-tape__event-row');
+		if (!$eventRow.length || $eventRow.data('locationId') != event.location) {
+			this.$dummyEvent.remove();
+			$eventRow = this.$el.find('.sked-tape__event-row').filter(function() {
+				return $(this).data('locationId') == event.location;
 			});
-			this.$dummyEvent.remove().appendTo($location);
+			if ($eventRow.length) {
+				this.$dummyEvent.appendTo($eventRow);
+			}
 		}
 	},
 	renderEvent: function(event) {
