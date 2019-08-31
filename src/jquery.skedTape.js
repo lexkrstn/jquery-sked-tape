@@ -990,12 +990,15 @@ SkedTape.prototype = {
 	handleTimelineClick: function(e) {
 		if (eventFromEvent(e)) return;
 		if (this.isAdding()) {
-			return this.completeAdding(e);
+			if (this.dummyEvent.location) {
+				this.completeAdding(e);
+			}
+		} else {
+			var jqEvent = this.makeMouseEvent('timeline:click.skedtape', e, {
+				detail: { component: this }
+			});
+			this.$el.trigger(jqEvent, [this]);
 		}
-		var jqEvent = this.makeMouseEvent('timeline:click.skedtape', e, {
-			detail: { component: this }
-		});
-		this.$el.trigger(jqEvent, [this]);
 	},
 	handleTimelineContextMenu: function(e) {
 		if (eventFromEvent(e)) return;
