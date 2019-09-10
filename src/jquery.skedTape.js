@@ -20,6 +20,7 @@ var SkedTape = function(opts) {
 	this.$el.on('wheel', '.sked-tape__time-frame', $.proxy(this.handleWheel, this));
 	this.$el.on('click', '.sked-tape__intersection', $.proxy(this.handleIntersectionClick, this));
 	this.$el.on('contextmenu', '.sked-tape__intersection', $.proxy(this.handleIntersectionContextMenu, this));
+	this.$el.on('click', '.sked-tape__location', $.proxy(this.handleLocationClick, this));
 };
 
 SkedTape.defaultFormatters = {
@@ -876,6 +877,21 @@ SkedTape.prototype = {
 			screenY: e.screenY,
 			detail: $.extend(this.pick(e), props.detail)
 		}));
+	},
+	handleLocationClick: function(e) {
+		var locationId = $(e.currentTarget).data('id');
+		var locationName = $(e.currentTarget).attr('title');
+		// Emit an location click event
+		var jqEvent = this.makeMouseEvent('location:click.tile', e, {
+			detail: {
+				component: this,
+				location: {
+					id: locationId,
+					name: locationName
+				}
+			}
+		});
+		this.$el.trigger(jqEvent, [this]);
 	},
 	handleEventClick: function(e) {
 		var eventId = $(e.currentTarget).data('eventId');
