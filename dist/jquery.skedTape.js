@@ -50,12 +50,28 @@ var SkedTape = function(opts) {
 };
 
 SkedTape.defaultFormatters = {
-	date: function (date, endian, delim) {
+	/**
+	 * Formats the date.
+	 * 
+	 * Note, since the component itself invokes the function with a single
+	 * argument, when overriding the function you should provide only the first
+	 * one. The sole purpose of the rest of them is to be used from the derived
+	 * function for convenience. 
+	 * 
+	 * @param {Date} date The date to format.
+	 * @param {'m'|'l'} endian Date format endianess ('m' - US, 'l' - EU).
+	 *                         Default value is 'm'.
+	 * @param {String} delim Date component delimiter.
+	 *                       Default - '/' or '.' depending on `endian`'s value.
+	 */
+	date: function(date, endian, delim) {
 		endian = endian || 'm';
-		var nums = date.toISOString().substring(0, 10).split('-');
-		nums = endian === 'l' ? nums.reverse() : nums;
-		nums = endian === 'm' ? [parseInt(nums[1]), parseInt(nums[2]), nums[0]] : nums;
-		return nums.join(delim || (endian === 'm' ? '/' : '.'));
+		delim = delim || (endian === 'm' ? '/' : '.');
+		var nums = [date.getDate(), date.getMonth() + 1, date.getFullYear()];
+		if (endian === 'm') {
+			nums = [nums[1], nums[0], nums[2]];
+		}
+		return nums.join(delim);
 	},
 	roundDuration: function(ms) {
 		return ms;
@@ -653,15 +669,15 @@ SkedTape.prototype = {
 		$dummyLeft.html(leftText);
 		$dummyRight.html(rightText);
 		// Append to an appropriate location dom node
-		var $location = this.$dummyEvent.closest('.sked-tape__event-row');
-		if (!$location.length || $location.data('locationId') != event.location) {
-			this.$el.find('.sked-tape__event-row').each(function() {
-				if ($(this).data('locationId') == event.location) {
-					$location = $(this);
-					return false;
-				}
+		var $eventRow = this.$dummyEvent.closest('.sked-tape__event-row');
+		if (!$eventRow.length || $eventRow.data('locationId') != event.location) {
+			this.$dummyEvent.remove();
+			$eventRow = this.$el.find('.sked-tape__event-row').filter(function() {
+				return $(this).data('locationId') == event.location;
 			});
-			this.$dummyEvent.remove().appendTo($location);
+			if ($eventRow.length) {
+				this.$dummyEvent.appendTo($eventRow);
+			}
 		}
 	},
 	renderEvent: function(event) {
@@ -1001,12 +1017,15 @@ SkedTape.prototype = {
 	handleTimelineClick: function(e) {
 		if (eventFromEvent(e)) return;
 		if (this.isAdding()) {
-			return this.completeAdding(e);
+			if (this.dummyEvent.location) {
+				this.completeAdding(e);
+			}
+		} else {
+			var jqEvent = this.makeMouseEvent('timeline:click.skedtape', e, {
+				detail: { component: this }
+			});
+			this.$el.trigger(jqEvent, [this]);
 		}
-		var jqEvent = this.makeMouseEvent('timeline:click.skedtape', e, {
-			detail: { component: this }
-		});
-		this.$el.trigger(jqEvent, [this]);
 	},
 	handleTimelineContextMenu: function(e) {
 		if (eventFromEvent(e)) return;
@@ -1343,4 +1362,4 @@ $.skedTape = function(opts) {
 	return $('<div/>').skedTape($.extend({}, opts || {}, {deferRender: true}));
 };
 
-}));
+}));
