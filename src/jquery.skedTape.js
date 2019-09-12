@@ -878,34 +878,38 @@ SkedTape.prototype = {
 			detail: $.extend(this.pick(e), props.detail)
 		}));
 	},
+	dragEvent: function(eventId, e) {
+		e = e || {};
+		// Skip if some event is being dragged right now
+		if (this.isAdding()) return;
+		var event = this.getEvent(eventId);
+		// Make sure the event is allowed to be draggable
+		var jqEvent = this.makeMouseEvent('event:dragStart.skedtape', e, {
+			detail: { component: this, event: event }
+		});
+		this.$el.trigger(jqEvent, [this]);
+		if (!jqEvent.isDefaultPrevented()) {
+			// Emit an event delete event
+			var jqEvent = this.makeMouseEvent('event:dragStarted.skedtape', e, {
+				detail: { component: this, event: event }
+			});
+			this.$el.trigger(jqEvent, [this]);
+			// Remove it from the timeline and begin positioning
+			this.removeEvent(eventId);
+			this.startAdding({
+				id: event.id,
+				name: event.name,
+				duration: event.end.getTime() - event.start.getTime(),
+				userData: $.extend({}, event.userData || {}),
+				draggedEvent: event
+			});
+		}
+	},
 	handleEventClick: function(e) {
 		var eventId = $(e.currentTarget).data('eventId');
 		var event = this.getEvent(eventId);
 		if (this.isEditMode()) {
-			// Skip if some event is being dragged right now
-			if (this.isAdding()) return;
-			// Make sure the event is allowed to be draggable
-			var jqEvent = this.makeMouseEvent('event:dragStart.skedtape', e, {
-				detail: { component: this, event: event }
-			});
-			this.$el.trigger(jqEvent, [this]);
-			if (!jqEvent.isDefaultPrevented()) {
-				// Emit an event delete event
-				var event = this.getEvent(eventId);
-				var jqEvent = this.makeMouseEvent('event:dragStarted.skedtape', e, {
-					detail: { component: this, event: event }
-				});
-				this.$el.trigger(jqEvent, [this]);
-				// Remove it from the timeline and begin positioning
-				this.removeEvent(eventId);
-				this.startAdding({
-					id: event.id,
-					name: event.name,
-					duration: event.end.getTime() - event.start.getTime(),
-					userData: $.extend({}, event.userData || {}),
-					draggedEvent: event
-				});
-			}
+			this.dragEvent(eventId, e);
 		} else {
 			// Emit an event click event
 			var jqEvent = this.makeMouseEvent('event:click.skedtape', e, {
