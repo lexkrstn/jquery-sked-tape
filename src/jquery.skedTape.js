@@ -830,7 +830,8 @@ SkedTape.prototype = {
 		return this.render({preserveScroll: true});
 	},
 	updateUnlessOption: function(opts) {
-		return (this.$timeline && (!opts || opts.update)) ? this.update() : this;
+		var requested = !opts || opts.update === undefined || opts.update;
+		return (this.$timeline && requested) ? this.update() : this;
 	},
 	setSnapToMins: function(mins) {
 		this.snapToMins = mins;
