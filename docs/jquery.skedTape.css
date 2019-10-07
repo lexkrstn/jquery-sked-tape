@@ -227,7 +227,7 @@
   line-height: 16px;
 }
 
-.sked-tape__event:hover {
+.sked-tape__event:hover, .sked-tape__event--active {
   background-color: #e74030;
 }
 

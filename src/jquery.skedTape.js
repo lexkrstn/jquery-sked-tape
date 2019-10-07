@@ -228,6 +228,7 @@ SkedTape.prototype = {
 			url: entry.url || false,
 			className: entry.className || null,
 			disabled: entry.disabled || false,
+			active: entry.active || false,
 			userData: $.extend({}, entry.userData || {})
 		};
 		
