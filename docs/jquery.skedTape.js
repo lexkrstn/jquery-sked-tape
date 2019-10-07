@@ -680,6 +680,23 @@ SkedTape.prototype = {
 			}
 		}
 	},
+	updateEvent: function(eventId) {
+		var event = this.getEvent(eventId);
+		var $oldEvent = this.$timeline
+			.find('.sked-tape__event')
+			.filter(function() {
+				return this.data('eventId') == eventId;
+			});
+		if (event && $oldEvent.length) {
+			var $newEvent = this.renderEvent(event);
+			$oldEvent.replaceWith($newEvent);
+		} else {
+			// Adding an event (or removal one of them) entails rendering some
+			// other entities like time markers between events. We don't
+			// bother with that here and just rerender the entire component.
+			this.update();
+		}
+	},
 	renderEvent: function(event) {
 		// Create event node
 		if (event.url && !event.disabled) {
@@ -1215,6 +1232,7 @@ $.fn.skedTape = function(opts) {
 						'addLocation', 'addLocations', 'removeLocation',
 						'setTimespan', 'setDate', 'zoomIn', 'zoomOut', 'setZoom',
 						'resetZoom', 'render', 'setSnapToMins', 'dragEvent',
+						'updateEvent',
 					];
 					if (methods.indexOf(cmd) >= 0) {
 						obj[cmd].apply(obj, args);
@@ -1367,4 +1385,4 @@ $.skedTape = function(opts) {
 	return $('<div/>').skedTape($.extend({}, opts || {}, {deferRender: true}));
 };
 
-}));
+}));
