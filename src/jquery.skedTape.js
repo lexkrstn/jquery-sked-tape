@@ -658,7 +658,7 @@ SkedTape.prototype = {
 		var $oldEvent = this.$timeline
 			.find('.sked-tape__event')
 			.filter(function() {
-				return this.data('eventId') == eventId;
+				return $(this).data('eventId') == eventId;
 			});
 		if (event && $oldEvent.length) {
 			var $newEvent = this.renderEvent(event);
