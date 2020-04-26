@@ -23,16 +23,16 @@
   },
   "homepage": "https://github.com/lexkrstn/jquery-sked-tape#readme",
   "devDependencies": {
-    "gulp": "^4.0.0",
-    "gulp-autoprefixer": "^5.0.0",
+    "gulp": "^4.0.2",
+    "gulp-autoprefixer": "^7.0.1",
     "gulp-clean-dest": "^0.2.0",
-    "gulp-connect": "^5.5.0",
-    "gulp-if": "^2.0.2",
+    "gulp-connect": "^5.7.0",
+    "gulp-if": "^3.0.0",
     "gulp-notify": "^3.2.0",
     "gulp-open": "^3.0.1",
-    "gulp-plumber": "^1.2.0",
-    "gulp-sass": "^4.0.1",
-    "gulp-sourcemaps": "^2.6.4",
+    "gulp-plumber": "^1.2.1",
+    "gulp-sass": "^4.1.0",
+    "gulp-sourcemaps": "^2.6.5",
     "gulp-wrap": "^0.15.0"
   }
 }
