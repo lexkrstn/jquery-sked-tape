@@ -8,7 +8,9 @@ const gulp            = require('gulp'),
       plumber         = require('gulp-plumber'),
       notify          = require('gulp-notify'),
 	  open            = require('gulp-open'),
-	  wrap            = require('gulp-wrap')
+	  wrap            = require('gulp-wrap'),
+	  headerComment   = require('gulp-header-comment'),
+	  stripCssComments = require('gulp-strip-css-comments')
 
 const DEBUG = ['prod', 'production'].indexOf(process.env.NODE_ENV) < 0
 
@@ -37,6 +39,12 @@ gulp.task('sass', () => {
 			errLogToConsole: true
 		}))
 		.pipe(autoprefixer())
+		.pipe(stripCssComments())
+		.pipe(headerComment(`
+			jQuery.skedTape v<%= pkg.version %>
+			License: <%= pkg.license %>
+			Author: <%= pkg.author %>
+		`))
 	if (DEBUG) {
 		main = main.pipe(sourcemaps.write('.'))
 	}
@@ -52,6 +60,11 @@ gulp.task('copy-js', () =>
         .pipe(plumber(plumberErrorHandler))
 		.pipe(cleanDest('dist'))
 		.pipe(wrap({ src: './umd.template.txt' }))
+		.pipe(headerComment(`
+			jQuery.skedTape v<%= pkg.version %>
+			License: <%= pkg.license %>
+			Author: <%= pkg.author %>
+		`))
 		.pipe(gulp.dest('dist'))
 		.pipe(gulpif(TASK_NOTIFICATION, notify({message: 'JS copied'})))
 )

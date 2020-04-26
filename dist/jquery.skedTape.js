@@ -1,3 +1,9 @@
+/**
+ * jQuery.skedTape v2.4.2
+ * License: MIT
+ * Author: Alexander Korostin <lexkrstn@gmail.com>
+ */
+
 (function (factory) {
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
@@ -1386,4 +1392,4 @@ $.skedTape = function(opts) {
 	return $('<div/>').skedTape($.extend({}, opts || {}, {deferRender: true}));
 };
 
-}));
+}));

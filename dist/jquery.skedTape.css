@@ -1,9 +1,11 @@
-/* ==========================================================================
- * Default settings
- * ========================================================================== */
-/* ==========================================================================
- * SkedTape
- * ========================================================================== */
+/**
+ * jQuery.skedTape v2.4.2
+ * License: MIT
+ * Author: Alexander Korostin <lexkrstn@gmail.com>
+ */
+
+
+
 .sked-tape {
   display: flex;
   align-items: stretch;
@@ -93,8 +95,7 @@
 
 .sked-tape__hours {
   background: white;
-  -webkit-transform-style: preserve-3d;
-          transform-style: preserve-3d;
+  transform-style: preserve-3d;
 }
 
 .sked-tape__hours > ul {
@@ -125,8 +126,7 @@
 }
 
 .sked-tape__hours > ul > li:not(:first-child) > time {
-  -webkit-transform: translateX(-50%);
-          transform: translateX(-50%);
+  transform: translateX(-50%);
 }
 
 .sked-tape__hours > ul > li:last-child {
@@ -135,8 +135,7 @@
 }
 
 .sked-tape__hours > ul > li:last-child > time {
-  -webkit-transform: translateX(-100%);
-          transform: translateX(-100%);
+  transform: translateX(-100%);
 }
 
 .sked-tape__timeline-wrap {
@@ -192,8 +191,7 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  -webkit-transform: translate(-50%, -50%);
-          transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
   background: white;
   border-radius: 0.2em;
   padding: 2px;
@@ -266,8 +264,7 @@
   position: absolute;
   display: block;
   top: 50%;
-  -webkit-transform: translateY(-50%);
-          transform: translateY(-50%);
+  transform: translateY(-50%);
   color: #fff;
   border: 1px solid #e32c1b;
   background: rgba(227, 44, 27, 0.69);
@@ -289,8 +286,7 @@
 .sked-tape__center {
   position: relative;
   top: 50%;
-  -webkit-transform: translateY(-50%);
-          transform: translateY(-50%);
+  transform: translateY(-50%);
   display: block;
   padding: 0 10px;
 }
