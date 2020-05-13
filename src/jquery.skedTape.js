@@ -316,7 +316,11 @@ SkedTape.prototype = {
 			// Add the dragged event back on the timeline
 			var draggedEvent = this.dummyEvent.draggedEvent;
 			if (draggedEvent) {
-				this.addEvent(draggedEvent, {preserveId: true, update: true});
+				this.addEvent(draggedEvent, {
+					preserveId: true,
+					update: true,
+					allowCollisions: true,
+				});
 				var jqEvent = $.Event('event:dragCanceled.skedtape', {
 					detail: { event: draggedEvent }
 				});
