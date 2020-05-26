@@ -756,6 +756,26 @@ SkedTape.prototype = {
 		}, this);
 	},
 	/**
+	 * A helper might be required by the client to find out whether the tape
+	 * has intersecting events.
+	 */
+	hasIntersections: function() {
+		var eventA, eventB, j;
+		for (var i = 0; i < this.events.length; i++) {
+			eventA = this.events[i];
+			for (j = i + 1; j < this.events.length; j++) {
+				eventB = this.events[j];
+				if (
+					eventA.location === eventB.location &&
+					findIntersection(eventA, eventB)
+				) {
+					return true;
+				}
+			}
+		}
+		return false;
+	},
+	/**
 	 * Returns event intersection list for a specified location.
 	 */
 	getIntersections: function(location) {

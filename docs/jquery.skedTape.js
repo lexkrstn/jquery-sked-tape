@@ -1,5 +1,5 @@
 /**
- * jQuery.skedTape v2.4.4
+ * jQuery.skedTape v2.4.6
  * License: MIT
  * Author: Alexander Korostin <lexkrstn@gmail.com>
  */
@@ -787,6 +787,26 @@ SkedTape.prototype = {
 				$timeIndicator.hide();
 			}
 		}, this);
+	},
+	/**
+	 * A helper might be required by the client to find out whether the tape
+	 * has intersecting events.
+	 */
+	hasIntersections: function() {
+		var eventA, eventB, j;
+		for (var i = 0; i < this.events.length; i++) {
+			eventA = this.events[i];
+			for (j = i + 1; j < this.events.length; j++) {
+				eventB = this.events[j];
+				if (
+					eventA.location === eventB.location &&
+					findIntersection(eventA, eventB)
+				) {
+					return true;
+				}
+			}
+		}
+		return false;
 	},
 	/**
 	 * Returns event intersection list for a specified location.
