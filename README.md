@@ -11,8 +11,8 @@ Usually it looks like:
 ```javascript
 var $sked = $('#sked').skedTape({
     caption: 'Cities',
-    start: yesterday(22, 0), // Timeline starts this date-time (UTC)
-    end: today(12, 0),       // Timeline ends this date-time (UTC)
+    start: yesterday(22, 0), // Timeline starts this date-time
+    end: today(12, 0),       // Timeline ends this date-time
     showEventTime: true,     // Whether to show event start-end time
     showEventDuration: true, // Whether to show event duration
     locations: [
