@@ -887,7 +887,10 @@ SkedTape.prototype = {
 				var right = left + parseFloat($entry[0].style.width);
 				var TOLERANCE = 0.01;
 				var overflows = left < -TOLERANCE || right > 100 + TOLERANCE;
-				if ($.fn.popover && (tooSmall || overflows)) {
+				if (
+					$.fn.popover && this.showPopovers !== 'never' &&
+					(tooSmall || overflows || this.showPopovers === 'always')
+				) {
 					$entry.popover({
 						trigger: 'hover',
 						content: $entry.find('.sked-tape__center').html(),
@@ -1373,6 +1376,12 @@ $.fn.skedTape.defaults = {
 	 * enabled.
 	 */
 	intermissionRange: [1, 60],
+	/**
+	 * The default behavior is to show pop-ups for events that are either too
+	 * small to be visible or partially outside the timeline. The possible
+	 * options are: "default", "always" or "never".
+	 */
+	showPopovers: 'default',
 	/**
 	 * The hook invoked to determine whether an event may be added to a location.
 	 * The default implementation always returns *true*.

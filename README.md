@@ -65,6 +65,9 @@ var $sked = $('#sked').skedTape({
   events. Disabled by default.
 - `intermissionRange` (_[int, int]_) Interval (in minutes) between events to
   show intermission time when it is enabled. The default value is _[1, 60]_.
+- `showPopovers` (_"default"|"always"|"never"_) The default behavior is to show
+  pop-ups for events that are either too small to be visible or partially
+  outside the timeline.
 
 **Available event object options**:
 - `name` (_string_)
