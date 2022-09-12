@@ -729,12 +729,15 @@ SkedTape.prototype = {
 	},
 	computeEventWidth: function(event) {
 		// Clamp to timeline edge
+		var eventStart = this.start > event.start ? this.start : event.start;
 		var eventEnd = this.end < event.end ? this.end : event.end;
-		var durationHours = getDurationHours(event.start, eventEnd);
+		var durationHours = getDurationHours(eventStart, eventEnd);
 		return durationHours / getDurationHours(this.start, this.end) * 100 + '%';
 	},
 	computeEventOffset: function(event) {
-		var hoursBeforeEvent =  getDurationHours(this.start, event.start);
+		// Clamp to timeline edge
+		var eventStart = this.start > event.start ? this.start : event.start;
+		var hoursBeforeEvent =  getDurationHours(this.start, eventStart);
 		return hoursBeforeEvent /  getDurationHours(this.start, this.end) * 100 + '%';
 	},
 	updateTimeIndicatorsPos: function() {
