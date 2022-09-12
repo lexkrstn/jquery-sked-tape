@@ -1,3 +1,7 @@
+## [2.5.0] 2022-09-13
+### Changed
+- Added clampEventStart option to clamp long events to the start of the timeline.
+
 ## [2.0.0] 2019-06-02
 ### Changed
 - Doesn't work with dates in UTC timezone anymore.

@@ -729,12 +729,15 @@ SkedTape.prototype = {
 	},
 	computeEventWidth: function(event) {
 		// Clamp to timeline edge
+		var eventStart = this.clampEventStart && this.start > event.start ? this.start : event.start;
 		var eventEnd = this.end < event.end ? this.end : event.end;
-		var durationHours = getDurationHours(event.start, eventEnd);
+		var durationHours = getDurationHours(eventStart, eventEnd);
 		return durationHours / getDurationHours(this.start, this.end) * 100 + '%';
 	},
 	computeEventOffset: function(event) {
-		var hoursBeforeEvent =  getDurationHours(this.start, event.start);
+		// Clamp to timeline edge
+		var eventStart = this.clampEventStart && this.start > event.start ? this.start : event.start;
+		var hoursBeforeEvent =  getDurationHours(this.start, eventStart);
 		return hoursBeforeEvent /  getDurationHours(this.start, this.end) * 100 + '%';
 	},
 	updateTimeIndicatorsPos: function() {
@@ -1302,6 +1305,11 @@ $.fn.skedTape.defaults = {
 	 * Minimum gap to DO NOT highlight adjacent events.
 	 */
 	maxTimeGapHi: false,
+	/**
+	 * Whether to clamp the start of events to the beginning of the displayed timeline.
+     * The actual start time is still shown on the event (if showEventTime is true).
+	 */
+	clampEventStart: false,
 	/**
 	 * Enables horizontal timeline scrolling with vertical mouse wheel.
 	 */
