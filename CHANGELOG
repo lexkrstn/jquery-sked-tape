@@ -1,4 +1,4 @@
-## 2022-09-12
+## [2.5.0] 2022-09-12
 ### Changed
 - Long events are clamped to the end of the timeline, but not to the start of the timeline. This is now fixed.
 

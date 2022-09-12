@@ -1,6 +1,6 @@
 const gulp            = require('gulp'),
       cleanDest       = require('gulp-clean-dest'),
-      sass            = require('gulp-sass'),
+      sass            = require('gulp-sass')(require('sass')),
       sourcemaps      = require('gulp-sourcemaps'),
       connect         = require('gulp-connect'),
       autoprefixer    = require('gulp-autoprefixer'),
