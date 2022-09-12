@@ -1,6 +1,6 @@
-## [2.5.0] 2022-09-12
+## [2.5.0] 2022-09-13
 ### Changed
-- Long events are clamped to the end of the timeline, but not to the start of the timeline. This is now fixed.
+- Added clampEventStart option to clamp long events to the start of the timeline.
 
 ## [2.0.0] 2019-06-02
 ### Changed
